@@ -1,0 +1,4 @@
+node_modules/
+dist/
+src/themes-data.js
+.DS_Store

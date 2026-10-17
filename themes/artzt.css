@@ -1,0 +1,116 @@
+/* Artzt Theme (Canvas Safe Edition)
+ * Based on Water.css with custom header banner styling.
+ */
+
+/* 1. Reset & Inheritance */
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  background-color: transparent;
+  color: inherit;
+}
+
+/* 2. Initial Page Title Banner */
+.kerplunk > section:first-of-type > h1,
+.kerplunk > section:first-of-type > h2:first-child,
+.kerplunk > section:first-of-type > h2:first-of-type,
+.kerplunk > h1:first-of-type,
+.kerplunk > h2:first-of-type,
+section:first-of-type > h1:first-child,
+section:first-of-type > h2:first-child {
+  background-color: #2c5367;
+  color: white;
+  margin: 20px 0 0 0;
+  padding: 20px;
+}
+
+/* 3. Typography */
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: 12px;
+  margin-top: 24px;
+  font-weight: 600;
+  color: inherit;
+}
+
+h1 { font-size: 2.2em; }
+h2 { font-size: 1.7em; }
+h3 { font-size: 1.3em; }
+h4 { font-size: 1.1em; }
+
+/* 4. Links */
+a {
+  color: #2c5367;
+  text-decoration: none;
+  font-weight: 600;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* 5. Block Elements */
+blockquote {
+  border-left: 4px solid #2c5367;
+  margin: 1.5em 0;
+  padding: 0.5em 1em;
+  font-style: italic;
+  background: rgba(127, 127, 127, 0.08);
+}
+
+code, samp, kbd {
+  background: rgba(127, 127, 127, 0.15);
+  padding: 2.5px 5px;
+  border-radius: 4px;
+  font-size: 0.95em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: inherit;
+}
+
+pre {
+  background: rgba(127, 127, 127, 0.1);
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid rgba(127, 127, 127, 0.3);
+  margin: 24px 0;
+}
+
+/* 6. Tables */
+table {
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+td, th {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+}
+
+th {
+  background-color: rgba(44, 83, 103, 0.08);
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background-color: rgba(127, 127, 127, 0.05);
+}
+
+/* 7. Buttons */
+button, input[type='submit'] {
+  background-color: rgba(127, 127, 127, 0.15);
+  color: inherit;
+  padding: 10px 30px;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background-color: rgba(127, 127, 127, 0.25);
+}
