@@ -10,16 +10,11 @@ const { addHeadingAnchors } = require('./heading-anchors.js');
 const { isQuizFile, processQuizQti } = require('./qti-generator.js');
 const { findProjectConfig, rewriteHtmlAnchors } = require('./link-resolver.js');
 
-const SUPPORTED_EXTS = ['.md', '.markdown', '.docx'];
+const SUPPORTED_EXTS = ['.md', '.markdown'];
 const DEFAULT_SCOPE = 'kerplunk';
 
 function isSupportedFile(filePath) {
     return SUPPORTED_EXTS.includes(path.extname(filePath).toLowerCase());
-}
-
-function isMarkdownFile(filePath) {
-    const ext = path.extname(filePath).toLowerCase();
-    return ext === '.md' || ext === '.markdown';
 }
 
 function hasCommand(cmd) {
@@ -123,10 +118,9 @@ async function renderHtml(inputPath, theme, options = {}) {
         docRelDir = ''
     } = options;
 
-    const sourceFormat = isMarkdownFile(inputPath) ? 'gfm' : 'docx';
     const rawHtml = await runPandoc([
         inputPath,
-        '-f', sourceFormat,
+        '-f', 'gfm',
         '-t', 'html5',
         '--wrap=none',
         '--math-method=webtex',
@@ -154,7 +148,7 @@ async function renderHtml(inputPath, theme, options = {}) {
 }
 
 /**
- * Writes the requested outputs (html, pdf, docx, plus a QTI zip for quiz files)
+ * Writes the requested outputs (html, pdf, plus a QTI zip for quiz files)
  * for one source file into outputDir. themeName = null means no theme.
  */
 async function convertFile(inputPath, theme, outputDir, options = {}) {
@@ -172,7 +166,6 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
 
     const fileExt = path.extname(inputPath).toLowerCase();
     const baseName = path.basename(inputPath, fileExt);
-    const sourceFormat = isMarkdownFile(inputPath) ? 'gfm' : 'docx';
 
     let loadedTheme = null;
     let effectiveThemeName = null;
@@ -242,7 +235,7 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
             try {
                 await runPandoc([
                     inputPath,
-                    '-f', sourceFormat,
+                    '-f', 'gfm',
                     '-t', 'pdf',
                     '-o', pdfOutputFile,
                     '--math-method=webtex'
@@ -255,23 +248,7 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
         }
     }
 
-    if (formats.includes('docx')) {
-        const docxOutputFile = path.join(outputDir, `${outStem}.docx`);
-        console.log(`${indent}...Rendering Standalone DOCX via pandoc...`);
-        try {
-            await runPandoc([
-                inputPath,
-                '-f', sourceFormat,
-                '-t', 'docx',
-                '-o', docxOutputFile
-            ]);
-            console.log(`${indent}✅ DOCX Output:  ${docxOutputFile}`);
-        } catch (err) {
-            console.error(`${indent}❌ DOCX Pandoc Error: ${err.message}`);
-        }
-    }
-
-    if (!noQti && isMarkdownFile(inputPath) && isQuizFile(inputPath)) {
+    if (!noQti && isQuizFile(inputPath)) {
         try {
             const qtiResult = processQuizQti(inputPath, outputDir, { baseUrl, docRelDir });
             if (qtiResult) {
@@ -289,7 +266,7 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
  * options:
  *   theme       theme name or .css path; null or 'none' leaves styling to Canvas
  *   outDir      output folder (default: next to each source file)
- *   formats     any of 'html', 'pdf', 'docx' (default: ['html'])
+ *   formats     any of 'html', 'pdf' (default: ['html'])
  *   baseUrl     overrides KERPLUNK_BASE_URL and the project config
  *   headingAnchors  add "#" permalinks to headings (default: true)
  *   scopeClass, noWrapper, appendTheme, noQti

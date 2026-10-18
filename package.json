@@ -1,7 +1,7 @@
 {
   "name": "kerplunk",
   "version": "0.1.0",
-  "description": "Compile Markdown and Word documents into Canvas-safe, accessible HTML with inlined theme styles and Canvas QTI quizzes.",
+  "description": "Compile Markdown course material into Canvas-safe, accessible HTML with inlined theme styles and Canvas QTI quizzes.",
   "main": "index.js",
   "bin": {
     "kerplunk": "./bin/kerplunk.js"

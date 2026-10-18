@@ -5,13 +5,13 @@ const { listThemes } = require('../src/themes.js');
 
 function printHelp() {
     console.log(`
-kerplunk: Markdown/Word -> Canvas-safe HTML
+kerplunk: Markdown -> Canvas-safe HTML
 
 Usage:
   kerplunk <input-path> [theme] [options]
 
 Arguments:
-  <input-path>          Path to .md/.docx file OR folder to convert recursively
+  <input-path>          Path to .md file OR folder to convert recursively
   [theme]               Optional theme CSS path (overrides config setting)
 
 Options:
@@ -23,7 +23,6 @@ Options:
   --no-wrapper          Omit the scope <div> from themed output
   --html-only           Generate only Canvas-safe HTML
   --pdf-only            Generate only styled PDF
-  --docx                Also generate standalone DOCX
   --no-qti              Disable auto Canvas QTI .zip generation for quiz files
   --no-anchors          Don't add "#" section links to headings
   --list-themes         List sample starter themes provided with kerplunk
@@ -35,7 +34,6 @@ Examples:
   kerplunk content/ -o dist/
   kerplunk content/ artzt.css -o ./dist
   kerplunk syllabus/syllabus.md --theme=themes/artzt.css
-  kerplunk document.docx my-theme.css -o ./dist
 `);
 }
 
@@ -49,7 +47,6 @@ function parseArgs(args) {
         appendTheme: false,
         htmlOnly: false,
         pdfOnly: false,
-        includeDocx: false,
         noQti: false,
         noAnchors: false,
         baseUrl: null
@@ -72,7 +69,6 @@ function parseArgs(args) {
         else if (arg === '--append-theme') opts.appendTheme = true;
         else if (arg === '--html-only') opts.htmlOnly = true;
         else if (arg === '--pdf-only') opts.pdfOnly = true;
-        else if (arg === '--docx') opts.includeDocx = true;
         else if (arg === '--no-qti') opts.noQti = true;
         else if (arg === '--no-anchors') opts.noAnchors = true;
         else if (arg.startsWith('-')) {
@@ -115,7 +111,6 @@ async function main() {
     if (opts.pdfOnly) formats = ['pdf'];
     else if (opts.htmlOnly) formats = ['html'];
     else formats = ['html', 'pdf'];
-    if (opts.includeDocx && !formats.includes('docx')) formats.push('docx');
 
     const { failed } = await build(opts.input, {
         theme: opts.theme,

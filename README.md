@@ -1,6 +1,6 @@
 # kerplunk
 
-Compiles Markdown (`.md`) and Word (`.docx`) course material into plain, semantic HTML you can paste into
+Compiles Markdown (`.md`) course material into plain, semantic HTML you can paste into
 the Canvas rich-text editor. By default there is no styling of its own: no wrapper, classes, or inline
 styles, so the institution's Canvas theme styles the page like any other.
 
@@ -14,7 +14,7 @@ Along the way it:
 - simplifies code blocks to a plain `<pre>` (no pandoc line anchors or highlighting spans)
 - rewrites relative links against a `baseUrl`, so `../week2/notes.md` points at the published repo
 - builds a Canvas QTI `.zip` for any `*-quiz.md` / `*_quiz.md` / `quiz*.md` file
-- optionally writes a PDF (styled, via wkhtmltopdf if installed) and a DOCX
+- optionally writes a PDF (styled, via wkhtmltopdf if installed)
 
 Derived from [Living Syllabus](https://github.com/ryanncode/living-syllabus) by Ryan N.
 
