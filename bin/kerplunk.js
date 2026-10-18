@@ -96,7 +96,7 @@ async function main() {
     }
     if (args.includes('--list-themes')) {
         console.log('\n🎨 Sample Themes (provided in kerplunk/themes/):');
-        listThemes().forEach(t => console.log(`  • ${t} (${t}.css)`));
+        listThemes().forEach((t) => console.log(`  • ${t} (${t}.css)`));
         console.log('\nCopy any sample theme to your course folder and configure it in kerplunk.config.json:');
         console.log('  { "theme": "my-theme.css" }');
         console.log('Or specify it via CLI: --theme my-theme.css\n');
@@ -131,7 +131,7 @@ async function main() {
     }
 }
 
-main().catch(err => {
+main().catch((err) => {
     console.error(`❌ Error: ${err.message || err}`);
     process.exit(1);
 });

@@ -15,21 +15,22 @@ assert.strictEqual(
 console.log('  ✅ Pandoc classes and unreferenced ids removed');
 
 // 2. Ids that the document links to are kept (in-page links, footnotes)
-const footnoteHtml = '<p>x<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>\n'
-    + '<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">\n'
-    + '<ol>\n<li id="fn1"><p>note<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>\n</ol>\n</section>';
+const footnoteHtml =
+    '<p>x<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>\n' +
+    '<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">\n' +
+    '<ol>\n<li id="fn1"><p>note<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>\n</ol>\n</section>';
 const footnoteOut = simplifyHtml(footnoteHtml);
-assert(footnoteOut.includes('<a href="#fn1" id="fnref1" role="doc-noteref">'), 'Footnote ref keeps its linked id and role');
+assert(
+    footnoteOut.includes('<a href="#fn1" id="fnref1" role="doc-noteref">'),
+    'Footnote ref keeps its linked id and role'
+);
 assert(footnoteOut.includes('<li id="fn1">'), 'Footnote target keeps its linked id');
 assert(footnoteOut.includes('<section role="doc-endnotes">'), 'Unlinked footnotes section id and classes removed');
 assert(!footnoteOut.includes('class='), 'No pandoc classes remain');
 console.log('  ✅ Linked ids preserved');
 
 // 3. Author-written classes survive (e.g. Canvas utility classes in raw HTML)
-assert.strictEqual(
-    simplifyHtml('<div class="content-box level1">Hi</div>'),
-    '<div class="content-box">Hi</div>'
-);
+assert.strictEqual(simplifyHtml('<div class="content-box level1">Hi</div>'), '<div class="content-box">Hi</div>');
 console.log('  ✅ Author classes preserved');
 
 // 4. Default-valued attributes are removed; meaningful alignment is kept
@@ -52,7 +53,9 @@ console.log('  ✅ Bare spans unwrapped');
 
 // 6. Task-list checkboxes become characters (Canvas strips <input>)
 assert.strictEqual(
-    simplifyHtml('<li><label><input type="checkbox" />Todo</label></li>\n<li><label><input type="checkbox" checked="" /><strong>Done</strong></label></li>'),
+    simplifyHtml(
+        '<li><label><input type="checkbox" />Todo</label></li>\n<li><label><input type="checkbox" checked="" /><strong>Done</strong></label></li>'
+    ),
     '<li>☐ Todo</li>\n<li>☑ <strong>Done</strong></li>'
 );
 console.log('  ✅ Task-list checkboxes replaced');
@@ -66,24 +69,28 @@ console.log('  ✅ Untouched markup preserved');
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'kerplunk-simplify-test-'));
 try {
     const mdFile = path.join(tmpDir, 'page.md');
-    fs.writeFileSync(mdFile, [
-        '# Week 1',
-        '',
-        '## Tasks',
-        '',
-        '- [ ] Read chapter 1',
-        '- [x] Install Node',
-        '',
-        '1. First',
-        '2. Second',
-        '',
-        '| Item | Points |',
-        '|:-----|-------:|',
-        '| Quiz | 10 |',
-        '',
-        'Email <teacher@school.edu>.',
-        ''
-    ].join('\n'), 'utf8');
+    fs.writeFileSync(
+        mdFile,
+        [
+            '# Week 1',
+            '',
+            '## Tasks',
+            '',
+            '- [ ] Read chapter 1',
+            '- [x] Install Node',
+            '',
+            '1. First',
+            '2. Second',
+            '',
+            '| Item | Points |',
+            '|:-----|-------:|',
+            '| Quiz | 10 |',
+            '',
+            'Email <teacher@school.edu>.',
+            ''
+        ].join('\n'),
+        'utf8'
+    );
 
     const kerplunkBin = path.resolve(__dirname, '..', 'bin', 'kerplunk.js');
     execFileSync('node', [kerplunkBin, mdFile, '--html-only'], { encoding: 'utf8' });
@@ -94,7 +101,12 @@ try {
     assert(!html.includes('<section'), 'No section wrappers');
     assert(!html.includes('class='), 'No classes');
     assert.strictEqual((html.match(/ id=/g) || []).length, 1, 'Only the h2 keeps an id (for its permalink)');
-    assert(html.includes('<h2 id="tasks">Tasks <a href="#tasks" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Tasks">#</a></h2>'), 'h2 has a styled permalink');
+    assert(
+        html.includes(
+            '<h2 id="tasks">Tasks <a href="#tasks" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Tasks">#</a></h2>'
+        ),
+        'h2 has a styled permalink'
+    );
     assert(!html.includes('<input'), 'No inputs');
     assert(!html.includes('<span'), 'No spans');
     assert(html.startsWith('<h1>Week 1</h1>'), 'First heading is plain, with no permalink');

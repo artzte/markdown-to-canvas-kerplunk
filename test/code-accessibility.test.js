@@ -3,10 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { execFileSync } = require('child_process');
-const {
-    enhanceCodeAccessibility,
-    getPandocHighlightArgs
-} = require('../src/code-accessibility.js');
+const { enhanceCodeAccessibility, getPandocHighlightArgs } = require('../src/code-accessibility.js');
 const { build, hasCommand } = require('../index.js');
 
 console.log('🧪 Testing code-accessibility.js...');
@@ -55,7 +52,10 @@ const entityInput = `<pre class="html"><code>&lt;div class=&quot;box&quot;&gt;
 &lt;/div&gt;</code></pre>`;
 
 const cleaned3 = enhanceCodeAccessibility(entityInput);
-assert(cleaned3.includes('&lt;div class=&quot;box&quot;&gt;\n  &lt;p&gt;A &amp; B&lt;/p&gt;\n&lt;/div&gt;'), 'HTML entities and 2-space indent must be preserved');
+assert(
+    cleaned3.includes('&lt;div class=&quot;box&quot;&gt;\n  &lt;p&gt;A &amp; B&lt;/p&gt;\n&lt;/div&gt;'),
+    'HTML entities and 2-space indent must be preserved'
+);
 console.log('  ✅ HTML entities and indentation preservation passed');
 
 // 4. Inline code and standard page links outside <pre> must NOT be modified
@@ -86,7 +86,10 @@ console.log('  ✅ Multiple code blocks passed');
 // 6. getPandocHighlightArgs check
 const highlightArgs = getPandocHighlightArgs();
 assert(Array.isArray(highlightArgs), 'Must return array of args');
-assert(highlightArgs.includes('--syntax-highlighting=none') || highlightArgs.includes('--no-highlight'), 'Must return valid syntax highlighting disable flag');
+assert(
+    highlightArgs.includes('--syntax-highlighting=none') || highlightArgs.includes('--no-highlight'),
+    'Must return valid syntax highlighting disable flag'
+);
 console.log('  ✅ getPandocHighlightArgs passed');
 
 // 6b. hasCommand check
@@ -166,30 +169,31 @@ console.log(answer);
     const sampleSimple = path.resolve(__dirname, '..', 'themes', 'simple.css');
     fs.copyFileSync(sampleSimple, path.join(tmpDir, 'simple.css'));
 
-    build(mdFile, { theme: path.join(tmpDir, 'simple.css'), outDir: libOutDir, formats: ['html'], appendTheme: true }).then(() => {
-        const libHtmlPath = path.join(libOutDir, 'test-doc_simple.html');
-        assert(fs.existsSync(libHtmlPath), 'build() must produce output file');
-        const libHtml = fs.readFileSync(libHtmlPath, 'utf8');
+    build(mdFile, { theme: path.join(tmpDir, 'simple.css'), outDir: libOutDir, formats: ['html'], appendTheme: true })
+        .then(() => {
+            const libHtmlPath = path.join(libOutDir, 'test-doc_simple.html');
+            assert(fs.existsSync(libHtmlPath), 'build() must produce output file');
+            const libHtml = fs.readFileSync(libHtmlPath, 'utf8');
 
-        assert(!libHtml.includes('href="#cb'), 'build() output must not contain #cb links');
-        assert(!libHtml.includes('sourceCode'), 'build() output must not contain sourceCode');
-        assert(libHtml.includes('<div class="kerplunk"'), 'build() output must use the kerplunk scope class');
+            assert(!libHtml.includes('href="#cb'), 'build() output must not contain #cb links');
+            assert(!libHtml.includes('sourceCode'), 'build() output must not contain sourceCode');
+            assert(libHtml.includes('<div class="kerplunk"'), 'build() output must use the kerplunk scope class');
 
-        const libPreMatches = [...libHtml.matchAll(/<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi)];
-        assert.strictEqual(libPreMatches.length, 2, 'build() output must have exactly 2 <pre> blocks');
-        for (const match of libPreMatches) {
-            const preInner = match[2];
-            assert(!preInner.includes('<a'), 'build() pre inner must not contain <a> tag');
-            assert(!preInner.includes('<code'), 'build() pre inner must not contain <code> tag');
-        }
+            const libPreMatches = [...libHtml.matchAll(/<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi)];
+            assert.strictEqual(libPreMatches.length, 2, 'build() output must have exactly 2 <pre> blocks');
+            for (const match of libPreMatches) {
+                const preInner = match[2];
+                assert(!preInner.includes('<a'), 'build() pre inner must not contain <a> tag');
+                assert(!preInner.includes('<code'), 'build() pre inner must not contain <code> tag');
+            }
 
-        console.log('  ✅ End-to-end library build() code block test passed');
-        console.log('\n🎉 All code accessibility tests passed successfully!');
-    }).catch(err => {
-        console.error(err);
-        process.exit(1);
-    });
-
+            console.log('  ✅ End-to-end library build() code block test passed');
+            console.log('\n🎉 All code accessibility tests passed successfully!');
+        })
+        .catch((err) => {
+            console.error(err);
+            process.exit(1);
+        });
 } finally {
     // Cleanup will happen after Promise if needed, but let's schedule cleanup
     process.on('exit', () => {

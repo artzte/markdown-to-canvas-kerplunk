@@ -67,8 +67,8 @@ function normalizeFormats(formats) {
     const list = Array.isArray(formats) ? formats : [formats];
     const allowed = ['html', 'pdf'];
     const filtered = list
-        .map(f => typeof f === 'string' ? f.trim().toLowerCase() : '')
-        .filter(f => allowed.includes(f));
+        .map((f) => (typeof f === 'string' ? f.trim().toLowerCase() : ''))
+        .filter((f) => allowed.includes(f));
     return filtered.length > 0 ? Array.from(new Set(filtered)) : null;
 }
 
@@ -99,9 +99,10 @@ function findProjectConfig(startPath) {
 
     let currentDir;
     try {
-        currentDir = fs.existsSync(startPath) && fs.statSync(startPath).isDirectory()
-            ? path.resolve(startPath)
-            : path.dirname(path.resolve(startPath));
+        currentDir =
+            fs.existsSync(startPath) && fs.statSync(startPath).isDirectory()
+                ? path.resolve(startPath)
+                : path.dirname(path.resolve(startPath));
     } catch {
         currentDir = path.resolve(process.cwd());
     }
@@ -234,7 +235,7 @@ function resolveAnchorHref(href, baseUrl, docRelDir = '') {
     // Split off query string and hash
     const match = trimmed.match(/^([^?#]*)([?#].*)?$/);
     const pathname = match ? match[1] : trimmed;
-    const searchAndHash = match ? (match[2] || '') : '';
+    const searchAndHash = match ? match[2] || '' : '';
 
     let combinedPath;
     if (pathname.startsWith('/')) {
@@ -258,12 +259,15 @@ function rewriteHtmlAnchors(html, baseUrl, docRelDir = '') {
     if (!html || !baseUrl) return html;
 
     return html.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
-        const updatedAttrs = attrs.replace(/\bhref\s*=\s*(?:(['"])(.*?)\1|([^\s>]+))/gi, (attrMatch, quote, quotedVal, unquotedVal) => {
-            const hrefVal = quote ? quotedVal : unquotedVal;
-            const q = quote || '"';
-            const resolved = resolveAnchorHref(hrefVal, baseUrl, docRelDir);
-            return `href=${q}${resolved}${q}`;
-        });
+        const updatedAttrs = attrs.replace(
+            /\bhref\s*=\s*(?:(['"])(.*?)\1|([^\s>]+))/gi,
+            (attrMatch, quote, quotedVal, unquotedVal) => {
+                const hrefVal = quote ? quotedVal : unquotedVal;
+                const q = quote || '"';
+                const resolved = resolveAnchorHref(hrefVal, baseUrl, docRelDir);
+                return `href=${q}${resolved}${q}`;
+            }
+        );
         return `<a${updatedAttrs}>`;
     });
 }

@@ -120,8 +120,10 @@ async function renderHtml(inputPath, theme, options = {}) {
 
     const rawHtml = await runPandoc([
         inputPath,
-        '-f', 'gfm',
-        '-t', 'html5',
+        '-f',
+        'gfm',
+        '-t',
+        'html5',
         '--wrap=none',
         '--math-method=webtex',
         ...getPandocHighlightArgs()
@@ -172,7 +174,7 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
 
     if (theme && typeof theme === 'object' && theme.css) {
         loadedTheme = theme;
-        effectiveThemeName = themeName || (theme.name || 'theme');
+        effectiveThemeName = themeName || theme.name || 'theme';
     } else if (typeof theme === 'string') {
         effectiveThemeName = themeName || path.basename(theme, '.css');
         loadedTheme = await loadTheme(theme, themeBaseDir);
@@ -218,12 +220,7 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
             const tempHtmlPath = path.join(outputDir, `.${outStem}.tmp.html`);
             try {
                 fs.writeFileSync(tempHtmlPath, printableHtml, 'utf8');
-                execFileSync('wkhtmltopdf', [
-                    '--quiet',
-                    '--enable-local-file-access',
-                    tempHtmlPath,
-                    pdfOutputFile
-                ]);
+                execFileSync('wkhtmltopdf', ['--quiet', '--enable-local-file-access', tempHtmlPath, pdfOutputFile]);
                 console.log(`${indent}✅ Styled PDF:  ${pdfOutputFile}`);
             } catch (err) {
                 console.error(`${indent}❌ wkhtmltopdf error: ${err.message}`);
@@ -233,17 +230,13 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
         } else {
             console.log(`${indent}...Rendering PDF via pandoc (wkhtmltopdf not found)...`);
             try {
-                await runPandoc([
-                    inputPath,
-                    '-f', 'gfm',
-                    '-t', 'pdf',
-                    '-o', pdfOutputFile,
-                    '--math-method=webtex'
-                ]);
+                await runPandoc([inputPath, '-f', 'gfm', '-t', 'pdf', '-o', pdfOutputFile, '--math-method=webtex']);
                 console.log(`${indent}✅ Standalone PDF: ${pdfOutputFile}`);
             } catch (err) {
                 console.error(`${indent}❌ PDF Pandoc Error: ${err.message}`);
-                console.error(`${indent}💡 Tip: Install wkhtmltopdf for PDFs that match the theme: sudo apt install wkhtmltopdf (Linux) or winget install wkhtmltopdf (Windows)`);
+                console.error(
+                    `${indent}💡 Tip: Install wkhtmltopdf for PDFs that match the theme: sudo apt install wkhtmltopdf (Linux) or winget install wkhtmltopdf (Windows)`
+                );
             }
         }
     }
@@ -252,7 +245,9 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
         try {
             const qtiResult = processQuizQti(inputPath, outputDir, { baseUrl, docRelDir });
             if (qtiResult) {
-                console.log(`${indent}📦 Canvas QTI:    ${path.basename(qtiResult.outputPath)} (${qtiResult.totalQuestions} questions, ${qtiResult.totalPoints} pts)`);
+                console.log(
+                    `${indent}📦 Canvas QTI:    ${path.basename(qtiResult.outputPath)} (${qtiResult.totalQuestions} questions, ${qtiResult.totalPoints} pts)`
+                );
             }
         } catch (qtiErr) {
             console.error(`${indent}⚠️ QTI Generation error: ${qtiErr.message}`);
@@ -289,7 +284,9 @@ async function build(inputPath, options = {}) {
 
     const isDirectory = fs.statSync(resolvedInputPath).isDirectory();
     if (!isDirectory && !isSupportedFile(resolvedInputPath)) {
-        throw new Error(`Unsupported file type '${path.extname(resolvedInputPath)}'. Supported: ${SUPPORTED_EXTS.join(', ')}`);
+        throw new Error(
+            `Unsupported file type '${path.extname(resolvedInputPath)}'. Supported: ${SUPPORTED_EXTS.join(', ')}`
+        );
     }
 
     if (!hasCommand('pandoc')) {
@@ -305,11 +302,12 @@ async function build(inputPath, options = {}) {
     // 1. Explicit option passed to build() / CLI flag
     // 2. Project config ("formats" in kerplunk.config.json or package.json)
     // 3. Default: ['html']
-    const effectiveFormats = (requestedFormats && requestedFormats.length > 0)
-        ? requestedFormats
-        : (projectConfig && projectConfig.formats && projectConfig.formats.length > 0)
-            ? projectConfig.formats
-            : ['html'];
+    const effectiveFormats =
+        requestedFormats && requestedFormats.length > 0
+            ? requestedFormats
+            : projectConfig && projectConfig.formats && projectConfig.formats.length > 0
+              ? projectConfig.formats
+              : ['html'];
 
     const hasWkhtmltopdf = effectiveFormats.includes('pdf') && hasCommand('wkhtmltopdf');
 
@@ -318,7 +316,10 @@ async function build(inputPath, options = {}) {
     // 2. Project config ("theme" in kerplunk.config.json or package.json) -> resolved relative to configDir
     // 3. None -> null (clean HTML styled by Canvas LMS)
     const explicitTheme = requestedTheme && requestedTheme.toLowerCase() !== 'none' ? requestedTheme : null;
-    const configTheme = projectConfig && projectConfig.theme && projectConfig.theme.toLowerCase() !== 'none' ? projectConfig.theme : null;
+    const configTheme =
+        projectConfig && projectConfig.theme && projectConfig.theme.toLowerCase() !== 'none'
+            ? projectConfig.theme
+            : null;
     const themeSpec = explicitTheme || configTheme || null;
 
     let loadedTheme = null;
@@ -326,7 +327,7 @@ async function build(inputPath, options = {}) {
     let themeStem = null;
 
     if (themeSpec) {
-        const themeBaseDir = explicitTheme ? process.cwd() : (projectConfig ? projectConfig.configDir : process.cwd());
+        const themeBaseDir = explicitTheme ? process.cwd() : projectConfig ? projectConfig.configDir : process.cwd();
         loadedTheme = await loadTheme(themeSpec, themeBaseDir);
         themeStem = path.basename(themeSpec, '.css');
         themeLabel = themeStem.toUpperCase();
@@ -353,12 +354,15 @@ async function build(inputPath, options = {}) {
         console.log(`   🔗 Base URL: ${effectiveBaseUrl}${source}`);
     }
     if (effectiveFormats.length > 1 || !effectiveFormats.includes('html')) {
-        const source = (!requestedFormats || requestedFormats.length === 0) && projectConfig && projectConfig.formats ? ` (from ${projectConfig.source})` : '';
+        const source =
+            (!requestedFormats || requestedFormats.length === 0) && projectConfig && projectConfig.formats
+                ? ` (from ${projectConfig.source})`
+                : '';
         console.log(`   📄 Formats:  ${effectiveFormats.join(', ')}${source}`);
     }
-    console.log(resolvedOutDir
-        ? `   📂 Output: ${resolvedOutDir}\n`
-        : `   📂 Output: In-place (next to source files)\n`);
+    console.log(
+        resolvedOutDir ? `   📂 Output: ${resolvedOutDir}\n` : `   📂 Output: In-place (next to source files)\n`
+    );
 
     // Without a project config, links resolve relative to the folder being built
     // (folder mode) or the current directory (single-file mode).
@@ -398,7 +402,11 @@ async function build(inputPath, options = {}) {
         }
     }
 
-    console.log(`\n✨ Done! Converted ${converted} of ${files.length} file(s).` + (failed > 0 ? ` (${failed} failed)` : '') + '\n');
+    console.log(
+        `\n✨ Done! Converted ${converted} of ${files.length} file(s).` +
+            (failed > 0 ? ` (${failed} failed)` : '') +
+            '\n'
+    );
     return { converted, failed };
 }
 

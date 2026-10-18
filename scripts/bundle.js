@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const esbuild = require('esbuild');
-const { execSync } = require('child_process');
 
 async function bundle() {
     console.log('⚡ Bundling kerplunk CLI with esbuild...');
@@ -68,7 +67,7 @@ exit $LASTEXITCODE
 }
 
 if (require.main === module) {
-    bundle().catch(err => {
+    bundle().catch((err) => {
         console.error('❌ Bundle failed:', err);
         process.exit(1);
     });

@@ -27,14 +27,24 @@ try {
     const kerplunkBin = path.resolve(__dirname, '..', 'bin', 'kerplunk.js');
     execFileSync('node', [kerplunkBin, 'week2.md', '--html-only'], { cwd: tmpDir, encoding: 'utf8' });
     const html = fs.readFileSync(path.join(tmpDir, 'week2.html'), 'utf8');
-    assert(html.includes('<h2 id="reading">Reading <a href="#reading" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Reading">#</a></h2>'), 'Page has styled heading permalinks');
+    assert(
+        html.includes(
+            '<h2 id="reading">Reading <a href="#reading" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Reading">#</a></h2>'
+        ),
+        'Page has styled heading permalinks'
+    );
     console.log('  ✅ End-to-end permalinks');
 
     fs.writeFileSync(path.join(tmpDir, 'h2start.md'), '## Top Heading\n\n### Next Section\n\nContent.\n', 'utf8');
     execFileSync('node', [kerplunkBin, 'h2start.md', '--html-only'], { cwd: tmpDir, encoding: 'utf8' });
     const h2StartHtml = fs.readFileSync(path.join(tmpDir, 'h2start.html'), 'utf8');
     assert(h2StartHtml.includes('<h2>Top Heading</h2>'), 'First heading (h2) has no permalink');
-    assert(h2StartHtml.includes('<h3 id="next-section">Next Section <a href="#next-section" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Next Section">#</a></h3>'), 'Subsequent heading has permalink');
+    assert(
+        h2StartHtml.includes(
+            '<h3 id="next-section">Next Section <a href="#next-section" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Next Section">#</a></h3>'
+        ),
+        'Subsequent heading has permalink'
+    );
     console.log('  ✅ First heading without anchor when document starts with h2');
 
     execFileSync('node', [kerplunkBin, 'week2.md', '--html-only', '--no-anchors'], { cwd: tmpDir, encoding: 'utf8' });

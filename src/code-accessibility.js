@@ -45,11 +45,14 @@ function enhanceCodeAccessibility(html) {
 
     // Step 1: Unwrap pandoc sourceCode wrapper divs:
     // <div class="sourceCode" id="...">...</div> -> extract inner pre or content
-    let result = html.replace(/<div\b[^>]*class="[^"]*\bsourceCode\b[^"]*"[^>]*>([\s\S]*?)<\/div>/gi, (match, inner) => {
-        const preMatch = inner.match(/<pre\b[^>]*>([\s\S]*?)<\/pre>/i);
-        const preInner = preMatch ? preMatch[1] : inner;
-        return `<pre>${preInner}</pre>`;
-    });
+    let result = html.replace(
+        /<div\b[^>]*class="[^"]*\bsourceCode\b[^"]*"[^>]*>([\s\S]*?)<\/div>/gi,
+        (match, inner) => {
+            const preMatch = inner.match(/<pre\b[^>]*>([\s\S]*?)<\/pre>/i);
+            const preInner = preMatch ? preMatch[1] : inner;
+            return `<pre>${preInner}</pre>`;
+        }
+    );
 
     // Step 2: Unwrap <code> tags directly nested inside <pre> tags
     result = result.replace(/<pre\b[^>]*>\s*<code\b[^>]*>([\s\S]*?)<\/code>\s*<\/pre>/gi, (match, codeInner) => {

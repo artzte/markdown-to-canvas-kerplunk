@@ -34,25 +34,23 @@ function escapeXml(unsafe) {
  */
 function markdownToHtml(mdText, { baseUrl = null, docRelDir = '' } = {}) {
     if (!mdText || !mdText.trim()) return '';
-    let html = '';
+    let html;
     try {
-        const stdout = execFileSync('pandoc', [
-            '-f', 'gfm',
-            '-t', 'html5',
-            '--wrap=none',
-            '--math-method=webtex',
-            ...getPandocHighlightArgs()
-        ], {
-            input: mdText,
-            encoding: 'utf8',
-            stdio: ['pipe', 'pipe', 'pipe']
-        });
+        const stdout = execFileSync(
+            'pandoc',
+            ['-f', 'gfm', '-t', 'html5', '--wrap=none', '--math-method=webtex', ...getPandocHighlightArgs()],
+            {
+                input: mdText,
+                encoding: 'utf8',
+                stdio: ['pipe', 'pipe', 'pipe']
+            }
+        );
         html = stdout.trim();
     } catch {
         // Fallback: simple paragraphs
         html = mdText
             .split(/\n\s*\n/)
-            .map(p => `<p>${escapeXml(p.trim())}</p>`)
+            .map((p) => `<p>${escapeXml(p.trim())}</p>`)
             .join('\n');
     }
 
@@ -120,7 +118,7 @@ function parseAssignmentMarkdown(markdownText, fallbackTitle = 'Assignment Quiz'
 
             // Extract optional points: (10 pts) or [5 points]
             let points = 1.0;
-            const ptsMatch = rawTitle.match(/[\(\[]\s*([\d.]+)\s*(?:pts?|points?)\s*[\)\]]/i);
+            const ptsMatch = rawTitle.match(/(?:\(|\[)\s*([\d.]+)\s*(?:pts?|points?)\s*(?:\)|\])/i);
             if (ptsMatch) {
                 points = parseFloat(ptsMatch[1]) || 1.0;
                 rawTitle = rawTitle.replace(ptsMatch[0], '').trim();
@@ -159,15 +157,16 @@ function parseAssignmentMarkdown(markdownText, fallbackTitle = 'Assignment Quiz'
     // If no explicit "### Question" headings were found, treat the entire assignment as a single essay question prompt
     if (questions.length === 0) {
         let docPoints = 1.0;
-        const pointsMatch = markdownText.match(/\*\*Points:\*\*\s*([\d.]+)/i) ||
-                            markdownText.match(/Points:\s*([\d.]+)/i) ||
-                            markdownText.match(/[\(\[]\s*([\d.]+)\s*(?:pts?|points?)\s*[\)\]]/i);
+        const pointsMatch =
+            markdownText.match(/\*\*Points:\*\*\s*([\d.]+)/i) ||
+            markdownText.match(/Points:\s*([\d.]+)/i) ||
+            markdownText.match(/(?:\(|\[)\s*([\d.]+)\s*(?:pts?|points?)\s*(?:\)|\])/i);
         if (pointsMatch) {
             docPoints = parseFloat(pointsMatch[1]) || 1.0;
         }
 
         // Use assignment body (excluding the top title) as the prompt
-        const promptLines = lines.filter(l => !l.match(titleHeaderRegex));
+        const promptLines = lines.filter((l) => !l.match(titleHeaderRegex));
         const promptText = promptLines.join('\n').trim();
 
         if (promptText) {
@@ -306,13 +305,14 @@ function buildMetaXml(assessmentId, title, descriptionHtml, totalPoints) {
  * Builds the QTI 1.2 XML file with all essay question items.
  */
 function buildAssessmentXml(assessmentId, title, questions) {
-    const itemsXml = questions.map((q, idx) => {
-        const qId = `${assessmentId}_q${q.number || idx + 1}`;
-        const refId = `ref_${qId}`;
-        const pts = q.points.toFixed(1);
-        const htmlPrompt = q.htmlPrompt || `<p>${escapeXml(q.prompt)}</p>`;
+    const itemsXml = questions
+        .map((q, idx) => {
+            const qId = `${assessmentId}_q${q.number || idx + 1}`;
+            const refId = `ref_${qId}`;
+            const pts = q.points.toFixed(1);
+            const htmlPrompt = q.htmlPrompt || `<p>${escapeXml(q.prompt)}</p>`;
 
-        return `      <item ident="${qId}" title="${escapeXml(q.title)}">
+            return `      <item ident="${qId}" title="${escapeXml(q.title)}">
         <itemmetadata>
           <qtimetadata>
             <qtimetadatafield>
@@ -354,7 +354,8 @@ function buildAssessmentXml(assessmentId, title, questions) {
           </respcondition>
         </resprocessing>
       </item>`;
-    }).join('\n');
+        })
+        .join('\n');
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2p1.xsd">
@@ -377,14 +378,7 @@ ${itemsXml}
  * Creates a Canvas QTI .zip file from parsed questions.
  */
 function createQtiZip(options) {
-    const {
-        title,
-        descriptionMarkdown = '',
-        questions,
-        outputPath,
-        baseUrl = null,
-        docRelDir = ''
-    } = options;
+    const { title, descriptionMarkdown = '', questions, outputPath, baseUrl = null, docRelDir = '' } = options;
 
     if (!questions || questions.length === 0) {
         return null;
@@ -396,7 +390,7 @@ function createQtiZip(options) {
 
     // Convert markdown descriptions and prompts to HTML
     const descriptionHtml = descriptionMarkdown ? markdownToHtml(descriptionMarkdown, { baseUrl, docRelDir }) : '';
-    const questionsWithHtml = questions.map(q => ({
+    const questionsWithHtml = questions.map((q) => ({
         ...q,
         htmlPrompt: markdownToHtml(q.prompt, { baseUrl, docRelDir })
     }));
@@ -450,7 +444,7 @@ function processQuizQti(inputFile, outputDir, options = {}) {
     const baseName = path.basename(inputFile, ext);
     const fallbackTitle = baseName
         .split(/[-_]/)
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ');
 
     const parsed = parseAssignmentMarkdown(content, fallbackTitle);

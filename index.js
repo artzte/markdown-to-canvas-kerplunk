@@ -8,12 +8,7 @@ const { enhanceTableAccessibility } = require('./src/table-accessibility.js');
 const { enhanceCodeAccessibility, getPandocHighlightArgs } = require('./src/code-accessibility.js');
 const { simplifyHtml } = require('./src/html-simplify.js');
 const { addHeadingAnchors } = require('./src/heading-anchors.js');
-const {
-    isQuizFile,
-    processQuizQti,
-    createQtiZip,
-    parseAssignmentMarkdown
-} = require('./src/qti-generator.js');
+const { isQuizFile, processQuizQti, createQtiZip, parseAssignmentMarkdown } = require('./src/qti-generator.js');
 const {
     normalizeBaseUrl,
     getBaseUrlFromPackage,

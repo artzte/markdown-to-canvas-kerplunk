@@ -27,7 +27,10 @@ console.log('  ✅ normalizeBaseUrl passed');
 assert.strictEqual(getBaseUrlFromPackage({ baseUrl: 'https://site.com' }), 'https://site.com');
 assert.strictEqual(getBaseUrlFromPackage({ baseURL: 'https://site2.com' }), 'https://site2.com');
 assert.strictEqual(getBaseUrlFromPackage({ kerplunk: { baseUrl: 'https://kp.com' } }), 'https://kp.com');
-assert.strictEqual(getBaseUrlFromPackage({ kerplunk: { baseUrl: 'https://kp.com' }, baseUrl: 'https://site.com' }), 'https://kp.com');
+assert.strictEqual(
+    getBaseUrlFromPackage({ kerplunk: { baseUrl: 'https://kp.com' }, baseUrl: 'https://site.com' }),
+    'https://kp.com'
+);
 assert.strictEqual(getBaseUrlFromPackage({ homepage: 'https://course.edu' }), null);
 assert.strictEqual(getBaseUrlFromPackage({}), null);
 console.log('  ✅ getBaseUrlFromPackage passed');
@@ -35,7 +38,10 @@ console.log('  ✅ getBaseUrlFromPackage passed');
 // 2b. getThemeFromPackage
 assert.strictEqual(getThemeFromPackage({ theme: 'artzt.css' }), 'artzt.css');
 assert.strictEqual(getThemeFromPackage({ kerplunk: { theme: 'my-theme.css' } }), 'my-theme.css');
-assert.strictEqual(getThemeFromPackage({ kerplunk: { theme: 'my-theme.css' }, theme: 'pkg-theme.css' }), 'my-theme.css');
+assert.strictEqual(
+    getThemeFromPackage({ kerplunk: { theme: 'my-theme.css' }, theme: 'pkg-theme.css' }),
+    'my-theme.css'
+);
 assert.strictEqual(getThemeFromPackage({}), null);
 console.log('  ✅ getThemeFromPackage passed');
 
@@ -76,14 +82,8 @@ assert.strictEqual(
     resolveAnchorHref('boo.md', base, 'pages\\week-1'),
     'https://username.github.io/my-course/pages/week-1/boo.md'
 );
-assert.strictEqual(
-    resolveAnchorHref('boo.md', base, 'pages'),
-    'https://username.github.io/my-course/pages/boo.md'
-);
-assert.strictEqual(
-    resolveAnchorHref('./boo.md', base, 'pages'),
-    'https://username.github.io/my-course/pages/boo.md'
-);
+assert.strictEqual(resolveAnchorHref('boo.md', base, 'pages'), 'https://username.github.io/my-course/pages/boo.md');
+assert.strictEqual(resolveAnchorHref('./boo.md', base, 'pages'), 'https://username.github.io/my-course/pages/boo.md');
 assert.strictEqual(
     resolveAnchorHref('/root-file.md', base, 'pages'),
     'https://username.github.io/my-course/root-file.md'
@@ -120,7 +120,7 @@ const htmlInput = `
 
 const rewritten = rewriteHtmlAnchors(htmlInput, 'https://username.github.io/my-course', 'pages');
 assert(rewritten.includes('href="https://username.github.io/my-course/other-folder/boo.md"'));
-assert(rewritten.includes('href=\'https://username.github.io/my-course/pages/assignments/lab1.html\''));
+assert(rewritten.includes("href='https://username.github.io/my-course/pages/assignments/lab1.html'"));
 assert(rewritten.includes('href="#grading"'));
 assert(rewritten.includes('href="https://canvas.instructure.com"'));
 console.log('  ✅ rewriteHtmlAnchors passed');
@@ -169,10 +169,7 @@ const cliPagesDir = path.join(cliTestDir, 'pages');
 fs.mkdirSync(cliPagesDir, { recursive: true });
 
 // Copy sample theme into cliTestDir
-fs.copyFileSync(
-    path.resolve(__dirname, '..', 'themes', 'simple.css'),
-    path.join(cliTestDir, 'simple.css')
-);
+fs.copyFileSync(path.resolve(__dirname, '..', 'themes', 'simple.css'), path.join(cliTestDir, 'simple.css'));
 
 fs.writeFileSync(
     path.join(cliTestDir, 'package.json'),
@@ -214,10 +211,14 @@ assert(
 console.log('  ✅ End-to-end kerplunk CLI with package.json baseUrl passed');
 
 // 7. End-to-End CLI test with --base-url flag override
-execFileSync('node', [kerplunkBin, testMdFile, 'simple.css', '--html-only', '--base-url', 'https://override.edu/custom-base'], {
-    cwd: cliTestDir,
-    encoding: 'utf8'
-});
+execFileSync(
+    'node',
+    [kerplunkBin, testMdFile, 'simple.css', '--html-only', '--base-url', 'https://override.edu/custom-base'],
+    {
+        cwd: cliTestDir,
+        encoding: 'utf8'
+    }
+);
 
 const overriddenHtml = fs.readFileSync(generatedHtmlPath, 'utf8');
 assert(
@@ -304,4 +305,3 @@ console.log('  ✅ End-to-end kerplunk CLI --html-only overrides config formats 
 fs.rmSync(cliTestDir, { recursive: true, force: true });
 
 console.log('\n🎉 All link-resolver and CLI integration tests passed successfully!');
-
