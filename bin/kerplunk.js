@@ -21,8 +21,9 @@ Options:
   --append-theme        Append '_<theme>' to output filenames
   -s, --scope <class>   CSS scope class for themed output (default: '${DEFAULT_SCOPE}')
   --no-wrapper          Omit the scope <div> from themed output
-  --html-only           Generate only Canvas-safe HTML
+  --pdf                 Also generate styled PDF (via wkhtmltopdf if installed)
   --pdf-only            Generate only styled PDF
+  --html-only           Generate only Canvas-safe HTML (default)
   --no-qti              Disable auto Canvas QTI .zip generation for quiz files
   --no-anchors          Don't add "#" section links to headings
   --list-themes         List sample starter themes provided with kerplunk
@@ -47,6 +48,7 @@ function parseArgs(args) {
         appendTheme: false,
         htmlOnly: false,
         pdfOnly: false,
+        pdf: false,
         noQti: false,
         noAnchors: false,
         baseUrl: null
@@ -67,8 +69,9 @@ function parseArgs(args) {
         else if (arg.startsWith('--scope=')) opts.scopeClass = stripDot(valueOf(arg));
         else if (arg === '--no-wrapper') opts.noWrapper = true;
         else if (arg === '--append-theme') opts.appendTheme = true;
-        else if (arg === '--html-only') opts.htmlOnly = true;
+        else if (arg === '--pdf') opts.pdf = true;
         else if (arg === '--pdf-only') opts.pdfOnly = true;
+        else if (arg === '--html-only') opts.htmlOnly = true;
         else if (arg === '--no-qti') opts.noQti = true;
         else if (arg === '--no-anchors') opts.noAnchors = true;
         else if (arg.startsWith('-')) {
@@ -107,10 +110,10 @@ async function main() {
         process.exit(1);
     }
 
-    let formats;
+    let formats = undefined;
     if (opts.pdfOnly) formats = ['pdf'];
+    else if (opts.pdf) formats = ['html', 'pdf'];
     else if (opts.htmlOnly) formats = ['html'];
-    else formats = ['html', 'pdf'];
 
     const { failed } = await build(opts.input, {
         theme: opts.theme,

@@ -14,7 +14,7 @@ Along the way it:
 - simplifies code blocks to a plain `<pre>` (no pandoc line anchors or highlighting spans)
 - rewrites relative links against a `baseUrl`, so `../week2/notes.md` points at the published repo
 - builds a Canvas QTI `.zip` for any `*-quiz.md` / `*_quiz.md` / `quiz*.md` file
-- optionally writes a PDF (styled, via wkhtmltopdf if installed)
+- optionally writes a PDF (styled, via wkhtmltopdf if installed, opt-in with `--pdf`)
 
 Derived from [Living Syllabus](https://github.com/ryanncode/living-syllabus) by Ryan N.
 
@@ -42,8 +42,9 @@ npm link
 ## Usage
 
 ```bash
-kerplunk modules/week2/week2-reading.md        # HTML + PDF next to the source
-kerplunk modules --html-only -o dist/          # whole folder, mirrored into dist/
+kerplunk modules/week2/week2-reading.md        # Canvas HTML next to the source
+kerplunk modules/week2/week2-reading.md --pdf  # Canvas HTML + styled PDF
+kerplunk modules -o dist/                      # whole folder, mirrored into dist/
 kerplunk syllabus.md --theme artzt.css         # opt in to an inlined theme
 kerplunk --list-themes                         # list sample starter themes
 kerplunk --help
