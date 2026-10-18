@@ -25,6 +25,7 @@ Options:
   --pdf-only            Generate only styled PDF
   --docx                Also generate standalone DOCX
   --no-qti              Disable auto Canvas QTI .zip generation for quiz files
+  --no-anchors          Don't add "#" section links to headings
   --list-themes         List sample starter themes provided with kerplunk
   -h, --help            Show this help message
   -v, --version         Show version
@@ -50,6 +51,7 @@ function parseArgs(args) {
         pdfOnly: false,
         includeDocx: false,
         noQti: false,
+        noAnchors: false,
         baseUrl: null
     };
     const valueOf = (arg) => arg.slice(arg.indexOf('=') + 1);
@@ -72,6 +74,7 @@ function parseArgs(args) {
         else if (arg === '--pdf-only') opts.pdfOnly = true;
         else if (arg === '--docx') opts.includeDocx = true;
         else if (arg === '--no-qti') opts.noQti = true;
+        else if (arg === '--no-anchors') opts.noAnchors = true;
         else if (arg.startsWith('-')) {
             console.error(`❌ Error: Unknown option '${arg}'.`);
             process.exit(1);
@@ -122,7 +125,8 @@ async function main() {
         scopeClass: opts.scopeClass,
         noWrapper: opts.noWrapper,
         appendTheme: opts.appendTheme,
-        noQti: opts.noQti
+        noQti: opts.noQti,
+        headingAnchors: !opts.noAnchors
     });
     if (failed > 0) {
         process.exit(1);

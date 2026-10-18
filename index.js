@@ -7,6 +7,7 @@ const { resolveTheme, loadTheme, listThemes, flattenThemeCss, THEMES_DIR } = req
 const { enhanceTableAccessibility } = require('./src/table-accessibility.js');
 const { enhanceCodeAccessibility, getPandocHighlightArgs } = require('./src/code-accessibility.js');
 const { simplifyHtml } = require('./src/html-simplify.js');
+const { addHeadingAnchors } = require('./src/heading-anchors.js');
 const {
     isQuizFile,
     processQuizQti,
@@ -41,6 +42,7 @@ module.exports = {
     enhanceCodeAccessibility,
     getPandocHighlightArgs,
     simplifyHtml,
+    addHeadingAnchors,
 
     // Link & URL resolution
     normalizeBaseUrl,

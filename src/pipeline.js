@@ -6,6 +6,7 @@ const { loadTheme } = require('./themes.js');
 const { enhanceTableAccessibility } = require('./table-accessibility.js');
 const { enhanceCodeAccessibility, getPandocHighlightArgs } = require('./code-accessibility.js');
 const { simplifyHtml } = require('./html-simplify.js');
+const { addHeadingAnchors } = require('./heading-anchors.js');
 const { isQuizFile, processQuizQti } = require('./qti-generator.js');
 const { findProjectConfig, rewriteHtmlAnchors } = require('./link-resolver.js');
 
@@ -101,7 +102,7 @@ function docRelDirFor(filePath, projectConfig, fallbackRoot) {
 
 /**
  * Converts one source file to a Canvas-safe HTML fragment: pandoc -> accessibility
- * fixes -> pandoc cleanup -> link rewriting. With a theme, the result is also wrapped
+ * fixes -> heading permalinks -> pandoc cleanup -> link rewriting. With a theme, the result is also wrapped
  * in a scope <div> and the theme's styles are inlined; with theme = null the plain
  * HTML is returned so Canvas's own theme styles it.
  */
@@ -109,6 +110,7 @@ async function renderHtml(inputPath, theme, options = {}) {
     const {
         scopeClass = DEFAULT_SCOPE,
         noWrapper = false,
+        headingAnchors = true,
         baseUrl = null,
         docRelDir = ''
     } = options;
@@ -125,7 +127,9 @@ async function renderHtml(inputPath, theme, options = {}) {
 
     const tableAccessibleHtml = enhanceTableAccessibility(rawHtml);
     const accessibleHtml = enhanceCodeAccessibility(tableAccessibleHtml);
-    const simpleHtml = simplifyHtml(accessibleHtml);
+    // Anchors go in before simplifyHtml, which keeps only ids that something links to.
+    const anchoredHtml = headingAnchors ? addHeadingAnchors(accessibleHtml) : accessibleHtml;
+    const simpleHtml = simplifyHtml(anchoredHtml);
     const linkedHtml = rewriteHtmlAnchors(simpleHtml, baseUrl, docRelDir);
     if (!theme) {
         return linkedHtml;
@@ -279,6 +283,7 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
  *   outDir      output folder (default: next to each source file)
  *   formats     any of 'html', 'pdf', 'docx' (default: ['html'])
  *   baseUrl     overrides KERPLUNK_BASE_URL and the project config
+ *   headingAnchors  add "#" permalinks to headings (default: true)
  *   scopeClass, noWrapper, appendTheme, noQti
  *
  * Returns { converted, failed }.

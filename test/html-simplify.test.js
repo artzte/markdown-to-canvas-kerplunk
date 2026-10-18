@@ -89,14 +89,15 @@ try {
     execFileSync('node', [kerplunkBin, mdFile, '--html-only'], { encoding: 'utf8' });
 
     const html = fs.readFileSync(path.join(tmpDir, 'page.html'), 'utf8');
-    assert.strictEqual((html.match(/style="/g) || []).length, 2, 'Only the two right-aligned cells carry a style');
+    assert.strictEqual((html.match(/style="/g) || []).length, 3, 'Right-aligned cells and heading anchor carry styles');
     assert(!html.includes('<div'), 'No wrapper div');
     assert(!html.includes('<section'), 'No section wrappers');
     assert(!html.includes('class='), 'No classes');
-    assert(!html.includes(' id='), 'No ids');
+    assert.strictEqual((html.match(/ id=/g) || []).length, 1, 'Only the h2 keeps an id (for its permalink)');
+    assert(html.includes('<h2 id="tasks">Tasks <a href="#tasks" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Tasks">#</a></h2>'), 'h2 has a styled permalink');
     assert(!html.includes('<input'), 'No inputs');
     assert(!html.includes('<span'), 'No spans');
-    assert(html.startsWith('<h1>Week 1</h1>'), 'Starts with a plain heading');
+    assert(html.startsWith('<h1>Week 1</h1>'), 'First heading is plain, with no permalink');
     assert(html.includes('<caption>Table: Item, Points</caption>'), 'Table caption has no inline style');
     assert(html.includes('<th scope="col">Item</th>'), 'Header scope kept');
     assert(html.includes('☐ Read chapter 1') && html.includes('☑ Install Node'), 'Checkboxes rendered as characters');
