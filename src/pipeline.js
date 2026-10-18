@@ -4,7 +4,7 @@ const { execFile, execFileSync } = require('child_process');
 const juice = require('juice');
 const { loadTheme } = require('./themes.js');
 const { enhanceTableAccessibility } = require('./table-accessibility.js');
-const { enhanceCodeAccessibility, getPandocHighlightArgs } = require('./code-accessibility.js');
+const { enhanceCodeAccessibility, getPandocHighlightArgs, getPandocMathArgs } = require('./code-accessibility.js');
 const { simplifyHtml } = require('./html-simplify.js');
 const { addHeadingAnchors } = require('./heading-anchors.js');
 const { isQuizFile, processQuizQti } = require('./qti-generator.js');
@@ -125,7 +125,7 @@ async function renderHtml(inputPath, theme, options = {}) {
         '-t',
         'html5',
         '--wrap=none',
-        '--math-method=webtex',
+        ...getPandocMathArgs(),
         ...getPandocHighlightArgs()
     ]);
 
@@ -230,7 +230,7 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
         } else {
             console.log(`${indent}...Rendering PDF via pandoc (wkhtmltopdf not found)...`);
             try {
-                await runPandoc([inputPath, '-f', 'gfm', '-t', 'pdf', '-o', pdfOutputFile, '--math-method=webtex']);
+                await runPandoc([inputPath, '-f', 'gfm', '-t', 'pdf', '-o', pdfOutputFile, ...getPandocMathArgs()]);
                 console.log(`${indent}✅ Standalone PDF: ${pdfOutputFile}`);
             } catch (err) {
                 console.error(`${indent}❌ PDF Pandoc Error: ${err.message}`);

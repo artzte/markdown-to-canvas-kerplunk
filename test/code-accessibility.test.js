@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { execFileSync } = require('child_process');
-const { enhanceCodeAccessibility, getPandocHighlightArgs } = require('../src/code-accessibility.js');
+const { enhanceCodeAccessibility, getPandocHighlightArgs, getPandocMathArgs } = require('../src/code-accessibility.js');
 const { build, hasCommand } = require('../index.js');
 
 console.log('🧪 Testing code-accessibility.js...');
@@ -97,6 +97,15 @@ assert.strictEqual(hasCommand('node'), true, 'node must be found on PATH');
 assert.strictEqual(hasCommand('pandoc'), true, 'pandoc must be found on PATH');
 assert.strictEqual(hasCommand('nonexistent_command_xyz_12345'), false, 'nonexistent command must not be found');
 console.log('  ✅ hasCommand passed');
+
+// 6c. getPandocMathArgs check
+const mathArgs = getPandocMathArgs();
+assert(Array.isArray(mathArgs), 'Must return array of math args');
+assert(
+    mathArgs.includes('--math-method=webtex') || mathArgs.includes('--webtex'),
+    'Must return valid math rendering flag'
+);
+console.log('  ✅ getPandocMathArgs passed');
 
 // 7. End-to-End kerplunk CLI test with code sample
 console.log('🧪 Running End-to-End kerplunk CLI code block test...');

@@ -5,7 +5,7 @@
 const { build, convertFile, renderHtml, findSourceFiles, hasCommand } = require('./src/pipeline.js');
 const { resolveTheme, loadTheme, listThemes, flattenThemeCss, THEMES_DIR } = require('./src/themes.js');
 const { enhanceTableAccessibility } = require('./src/table-accessibility.js');
-const { enhanceCodeAccessibility, getPandocHighlightArgs } = require('./src/code-accessibility.js');
+const { enhanceCodeAccessibility, getPandocHighlightArgs, getPandocMathArgs } = require('./src/code-accessibility.js');
 const { simplifyHtml } = require('./src/html-simplify.js');
 const { addHeadingAnchors } = require('./src/heading-anchors.js');
 const { isQuizFile, processQuizQti, createQtiZip, parseAssignmentMarkdown } = require('./src/qti-generator.js');
@@ -39,6 +39,7 @@ module.exports = {
     enhanceTableAccessibility,
     enhanceCodeAccessibility,
     getPandocHighlightArgs,
+    getPandocMathArgs,
     simplifyHtml,
     addHeadingAnchors,
 

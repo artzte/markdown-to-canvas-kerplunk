@@ -12,7 +12,7 @@ const { execFileSync } = require('child_process');
 const AdmZip = require('adm-zip');
 const { rewriteHtmlAnchors } = require('./link-resolver.js');
 const { enhanceTableAccessibility } = require('./table-accessibility.js');
-const { enhanceCodeAccessibility, getPandocHighlightArgs } = require('./code-accessibility.js');
+const { enhanceCodeAccessibility, getPandocHighlightArgs, getPandocMathArgs } = require('./code-accessibility.js');
 const { simplifyHtml } = require('./html-simplify.js');
 
 /**
@@ -38,7 +38,7 @@ function markdownToHtml(mdText, { baseUrl = null, docRelDir = '' } = {}) {
     try {
         const stdout = execFileSync(
             'pandoc',
-            ['-f', 'gfm', '-t', 'html5', '--wrap=none', '--math-method=webtex', ...getPandocHighlightArgs()],
+            ['-f', 'gfm', '-t', 'html5', '--wrap=none', ...getPandocMathArgs(), ...getPandocHighlightArgs()],
             {
                 input: mdText,
                 encoding: 'utf8',

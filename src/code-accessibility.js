@@ -1,6 +1,7 @@
 const { execFileSync } = require('child_process');
 
 let cachedHighlightArgs = null;
+let cachedMathArgs = null;
 
 /**
  * Returns the appropriate pandoc CLI flags to disable syntax highlighting.
@@ -25,6 +26,31 @@ function getPandocHighlightArgs() {
         cachedHighlightArgs = ['--syntax-highlighting=none'];
     }
     return cachedHighlightArgs;
+}
+
+/**
+ * Returns the appropriate pandoc CLI flags for math rendering.
+ * Pandoc >= 2.11 uses --math-method=webtex
+ * Pandoc < 2.11 uses --webtex
+ */
+function getPandocMathArgs() {
+    if (cachedMathArgs) {
+        return cachedMathArgs;
+    }
+    try {
+        const help = execFileSync('pandoc', ['--help'], {
+            encoding: 'utf8',
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+        if (help.includes('--math-method')) {
+            cachedMathArgs = ['--math-method=webtex'];
+        } else {
+            cachedMathArgs = ['--webtex'];
+        }
+    } catch {
+        cachedMathArgs = ['--math-method=webtex'];
+    }
+    return cachedMathArgs;
 }
 
 /**
@@ -94,5 +120,6 @@ function enhanceCodeAccessibility(html) {
 
 module.exports = {
     enhanceCodeAccessibility,
-    getPandocHighlightArgs
+    getPandocHighlightArgs,
+    getPandocMathArgs
 };
