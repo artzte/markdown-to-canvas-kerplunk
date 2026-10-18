@@ -8,6 +8,8 @@ Along the way it:
 
 - strips the markup pandoc adds that Canvas doesn't need (section wrappers, its own classes, unused ids,
   default-valued attributes, bare spans) and turns task-list checkboxes into ☐ / ☑
+- adds a `#` permalink after each h2–h6 heading, so you can right-click → copy a link to that section
+  (always visible: Canvas strips the `<style>` a hover effect would need; `--no-anchors` turns it off)
 - fixes tables for accessibility (`<caption>` from a following `: Caption` paragraph or the headers, `scope` on `<th>`)
 - simplifies code blocks to a plain `<pre>` (no pandoc line anchors or highlighting spans)
 - rewrites relative links against a `baseUrl`, so `../week2/notes.md` points at the published repo
@@ -34,18 +36,20 @@ npm run install-cli   # bundles to dist/kerplunk and copies it to ~/.local/bin/k
 ```bash
 kerplunk modules/week2/week2-reading.md        # HTML + PDF next to the source
 kerplunk modules --html-only -o dist/          # whole folder, mirrored into dist/
-kerplunk syllabus.md artzt                     # opt in to an inlined theme
-kerplunk --list-themes
+kerplunk syllabus.md --theme artzt.css         # opt in to an inlined theme
+kerplunk --list-themes                         # list sample starter themes
 kerplunk --help
 ```
 
 ### Themes (optional)
 
-Passing a theme inlines its CSS onto every element and wraps the output in `<div class="kerplunk">`.
-`--auto-theme` picks one per file from the folder name (`syllabus` → latex, `pages` → sakura, …).
+By default, kerplunk outputs plain, semantic HTML styled directly by your Canvas theme.
 
-Theme lookup order: the current directory, `./themes/`, the source file's folder and its `themes/`,
-the bundled `themes/`, then `~/.config/kerplunk/themes/`. A path to any `.css` file also works.
+If you specify a theme, its CSS is inlined onto each element and the output is wrapped in `<div class="kerplunk">`. Themes can be set via:
+1. CLI option: `--theme <path>` (e.g. `--theme artzt.css` or `--theme ./themes/water.css`), resolved relative to the current working directory (`process.cwd()`).
+2. Config file: `"theme": "artzt.css"` in `kerplunk.config.json` (or `.kerplunkrc` / `package.json`), resolved relative to the folder containing the config file.
+
+Starter sample stylesheets are provided in the `themes/` folder (view with `kerplunk --list-themes`). You can copy any sample theme into your course folder and customize it.
 
 ### Base URL
 
@@ -63,12 +67,12 @@ containing that config.
 
 ```js
 const { build, renderHtml, loadTheme } = require('kerplunk');
-await build('modules', { theme: 'artzt', outDir: 'dist', formats: ['html'] });
+await build('modules', { theme: 'artzt.css', outDir: 'dist', formats: ['html'] });
 ```
 
 ## Development
 
 ```bash
 npm test
-npm run build:themes   # regenerate src/themes-data.js (embedded themes for the bundle)
+npm run bundle
 ```

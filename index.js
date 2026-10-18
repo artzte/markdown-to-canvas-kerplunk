@@ -2,8 +2,8 @@
  * kerplunk library API. The CLI (bin/kerplunk.js) is a thin wrapper over build().
  */
 
-const { build, convertFile, renderHtml, findSourceFiles, detectTheme } = require('./src/pipeline.js');
-const { loadTheme, listThemes, flattenThemeCss } = require('./src/themes.js');
+const { build, convertFile, renderHtml, findSourceFiles } = require('./src/pipeline.js');
+const { resolveTheme, loadTheme, listThemes, flattenThemeCss, THEMES_DIR } = require('./src/themes.js');
 const { enhanceTableAccessibility } = require('./src/table-accessibility.js');
 const { enhanceCodeAccessibility, getPandocHighlightArgs } = require('./src/code-accessibility.js');
 const { simplifyHtml } = require('./src/html-simplify.js');
@@ -16,6 +16,7 @@ const {
 const {
     normalizeBaseUrl,
     getBaseUrlFromPackage,
+    getThemeFromPackage,
     findProjectConfig,
     resolveAnchorHref,
     rewriteHtmlAnchors
@@ -27,12 +28,13 @@ module.exports = {
     convertFile,
     renderHtml,
     findSourceFiles,
-    detectTheme,
 
     // Themes
+    resolveTheme,
     loadTheme,
     listThemes,
     flattenThemeCss,
+    THEMES_DIR,
 
     // Accessibility
     enhanceTableAccessibility,

@@ -5,6 +5,7 @@ const os = require('os');
 const {
     normalizeBaseUrl,
     getBaseUrlFromPackage,
+    getThemeFromPackage,
     findProjectConfig,
     resolveAnchorHref,
     rewriteHtmlAnchors
@@ -28,6 +29,13 @@ assert.strictEqual(getBaseUrlFromPackage({ kerplunk: { baseUrl: 'https://kp.com'
 assert.strictEqual(getBaseUrlFromPackage({ homepage: 'https://course.edu' }), null);
 assert.strictEqual(getBaseUrlFromPackage({}), null);
 console.log('  ✅ getBaseUrlFromPackage passed');
+
+// 2b. getThemeFromPackage
+assert.strictEqual(getThemeFromPackage({ theme: 'artzt.css' }), 'artzt.css');
+assert.strictEqual(getThemeFromPackage({ kerplunk: { theme: 'my-theme.css' } }), 'my-theme.css');
+assert.strictEqual(getThemeFromPackage({ kerplunk: { theme: 'my-theme.css' }, theme: 'pkg-theme.css' }), 'my-theme.css');
+assert.strictEqual(getThemeFromPackage({}), null);
+console.log('  ✅ getThemeFromPackage passed');
 
 // 3. resolveAnchorHref
 const base = 'https://username.github.io/my-course';
@@ -97,15 +105,31 @@ fs.mkdirSync(subDir, { recursive: true });
 
 fs.writeFileSync(
     path.join(tmpDir, 'package.json'),
-    JSON.stringify({ name: 'test-course', baseUrl: 'https://prof.edu/course' }),
+    JSON.stringify({ name: 'test-course', baseUrl: 'https://prof.edu/course', theme: 'artzt.css' }),
     'utf8'
 );
 
 const config = findProjectConfig(subDir);
 assert(config !== null);
 assert.strictEqual(config.baseUrl, 'https://prof.edu/course');
+assert.strictEqual(config.theme, 'artzt.css');
 assert.strictEqual(config.configDir, tmpDir);
 assert.strictEqual(config.source, 'package.json');
+
+// 5b. findProjectConfig with kerplunk.config.json
+fs.rmSync(path.join(tmpDir, 'package.json'));
+fs.writeFileSync(
+    path.join(tmpDir, 'kerplunk.config.json'),
+    JSON.stringify({ baseUrl: 'https://prof.edu/class', theme: 'custom-theme.css' }),
+    'utf8'
+);
+
+const configJson = findProjectConfig(subDir);
+assert(configJson !== null);
+assert.strictEqual(configJson.baseUrl, 'https://prof.edu/class');
+assert.strictEqual(configJson.theme, 'custom-theme.css');
+assert.strictEqual(configJson.configDir, tmpDir);
+assert.strictEqual(configJson.source, 'kerplunk.config.json');
 
 // Cleanup
 fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -115,6 +139,12 @@ console.log('  ✅ findProjectConfig passed');
 const cliTestDir = fs.mkdtempSync(path.join(os.tmpdir(), 'kerplunk-cli-test-'));
 const cliPagesDir = path.join(cliTestDir, 'pages');
 fs.mkdirSync(cliPagesDir, { recursive: true });
+
+// Copy sample theme into cliTestDir
+fs.copyFileSync(
+    path.resolve(__dirname, '..', 'themes', 'simple.css'),
+    path.join(cliTestDir, 'simple.css')
+);
 
 fs.writeFileSync(
     path.join(cliTestDir, 'package.json'),
@@ -135,8 +165,8 @@ fs.writeFileSync(
 const { execFileSync } = require('child_process');
 const kerplunkBin = path.resolve(__dirname, '..', 'bin', 'kerplunk.js');
 
-// Run kerplunk on week1.md
-execFileSync('node', [kerplunkBin, testMdFile, 'simple', '--html-only'], {
+// Run kerplunk on week1.md with simple.css
+execFileSync('node', [kerplunkBin, testMdFile, 'simple.css', '--html-only'], {
     cwd: cliTestDir,
     encoding: 'utf8'
 });
@@ -156,7 +186,7 @@ assert(
 console.log('  ✅ End-to-end kerplunk CLI with package.json baseUrl passed');
 
 // 7. End-to-End CLI test with --base-url flag override
-execFileSync('node', [kerplunkBin, testMdFile, 'simple', '--html-only', '--base-url', 'https://override.edu/custom-base'], {
+execFileSync('node', [kerplunkBin, testMdFile, 'simple.css', '--html-only', '--base-url', 'https://override.edu/custom-base'], {
     cwd: cliTestDir,
     encoding: 'utf8'
 });
@@ -170,7 +200,7 @@ console.log('  ✅ End-to-end kerplunk CLI with --base-url override passed');
 
 // 8. End-to-End CLI test running on subfolder (e.g. `kerplunk pages`)
 fs.rmSync(generatedHtmlPath, { force: true });
-execFileSync('node', [kerplunkBin, 'pages', 'simple', '--html-only'], {
+execFileSync('node', [kerplunkBin, 'pages', 'simple.css', '--html-only'], {
     cwd: cliTestDir,
     encoding: 'utf8'
 });
@@ -182,6 +212,28 @@ assert(
     'Subfolder conversion must calculate docRelDir relative to project root (package.json)'
 );
 console.log('  ✅ End-to-end kerplunk CLI on subfolder directory passed');
+
+// 9. End-to-End CLI test with kerplunk.config.json "theme" resolved relative to configDir
+fs.rmSync(generatedHtmlPath, { force: true });
+fs.writeFileSync(
+    path.join(cliTestDir, 'kerplunk.config.json'),
+    JSON.stringify({
+        baseUrl: 'https://username.github.io/my-course',
+        theme: 'simple.css'
+    }),
+    'utf8'
+);
+
+// Execute from inside the subfolder without specifying theme on CLI
+execFileSync('node', [kerplunkBin, 'week1.md', '--html-only'], {
+    cwd: cliPagesDir,
+    encoding: 'utf8'
+});
+
+assert(fs.existsSync(generatedHtmlPath), 'HTML file must be created using theme from kerplunk.config.json');
+const configThemedHtml = fs.readFileSync(generatedHtmlPath, 'utf8');
+assert(configThemedHtml.includes('<div class="kerplunk"'), 'Should be wrapped in kerplunk scope div from config theme');
+console.log('  ✅ End-to-end kerplunk CLI with kerplunk.config.json theme passed');
 
 // Cleanup
 fs.rmSync(cliTestDir, { recursive: true, force: true });

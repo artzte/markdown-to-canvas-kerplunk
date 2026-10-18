@@ -14,7 +14,6 @@
   ],
   "scripts": {
     "test": "node test/link-resolver.test.js && node test/code-accessibility.test.js && node test/html-simplify.test.js",
-    "build:themes": "node scripts/build-themes.js",
     "bundle": "node scripts/bundle.js",
     "install-cli": "node scripts/bundle.js && mkdir -p ~/.local/bin && cp dist/kerplunk ~/.local/bin/kerplunk && chmod +x ~/.local/bin/kerplunk && echo '✅ kerplunk installed to ~/.local/bin/kerplunk'"
   },

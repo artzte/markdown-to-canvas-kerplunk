@@ -12,14 +12,12 @@ Usage:
 
 Arguments:
   <input-path>          Path to .md/.docx file OR folder to convert recursively
-  [theme]               Optional theme name or .css path. Default: none, so the
-                        output is plain HTML styled by your institution's Canvas theme
+  [theme]               Optional theme CSS path (overrides config setting)
 
 Options:
-  -t, --theme <theme>   Theme to use (overrides positional theme argument)
-  --auto-theme          Auto-detect theme based on folder name (pages -> sakura, etc.)
+  -t, --theme <path>    Theme CSS file to use (e.g. artzt.css or themes/water.css)
   -o, --outdir <dir>    Custom output directory (default: same folder as input file(s))
-  -b, --base-url <url>  Base URL for links (or set "baseUrl" in package.json, or KERPLUNK_BASE_URL)
+  -b, --base-url <url>  Base URL for links (or set "baseUrl" in kerplunk.config.json/package.json)
   --append-theme        Append '_<theme>' to output filenames
   -s, --scope <class>   CSS scope class for themed output (default: '${DEFAULT_SCOPE}')
   --no-wrapper          Omit the scope <div> from themed output
@@ -27,16 +25,16 @@ Options:
   --pdf-only            Generate only styled PDF
   --docx                Also generate standalone DOCX
   --no-qti              Disable auto Canvas QTI .zip generation for quiz files
-  --list-themes         List all available built-in themes
+  --list-themes         List sample starter themes provided with kerplunk
   -h, --help            Show this help message
   -v, --version         Show version
 
 Examples:
   kerplunk pages/week1-assignment.md
   kerplunk content/ -o dist/
-  kerplunk content/ simple -o ./dist
-  kerplunk syllabus/syllabus.md --theme=artzt
-  kerplunk document.docx simple -o ./dist
+  kerplunk content/ artzt.css -o ./dist
+  kerplunk syllabus/syllabus.md --theme=themes/artzt.css
+  kerplunk document.docx my-theme.css -o ./dist
 `);
 }
 
@@ -48,7 +46,6 @@ function parseArgs(args) {
         scopeClass: DEFAULT_SCOPE,
         noWrapper: false,
         appendTheme: false,
-        autoTheme: false,
         htmlOnly: false,
         pdfOnly: false,
         includeDocx: false,
@@ -69,7 +66,6 @@ function parseArgs(args) {
         else if (arg.startsWith('--outdir=')) opts.outDir = valueOf(arg);
         else if (arg === '-s' || arg === '--scope') opts.scopeClass = stripDot(args[++i]);
         else if (arg.startsWith('--scope=')) opts.scopeClass = stripDot(valueOf(arg));
-        else if (arg === '--auto-theme') opts.autoTheme = true;
         else if (arg === '--no-wrapper') opts.noWrapper = true;
         else if (arg === '--append-theme') opts.appendTheme = true;
         else if (arg === '--html-only') opts.htmlOnly = true;
@@ -97,9 +93,11 @@ async function main() {
         return;
     }
     if (args.includes('--list-themes')) {
-        console.log('\n🎨 Available Built-in Themes:');
-        listThemes().forEach(t => console.log(`  • ${t}`));
-        console.log('\nYou can also pass a path to any custom CSS file.');
+        console.log('\n🎨 Sample Themes (provided in kerplunk/themes/):');
+        listThemes().forEach(t => console.log(`  • ${t} (${t}.css)`));
+        console.log('\nCopy any sample theme to your course folder and configure it in kerplunk.config.json:');
+        console.log('  { "theme": "my-theme.css" }');
+        console.log('Or specify it via CLI: --theme my-theme.css\n');
         return;
     }
 
@@ -118,7 +116,6 @@ async function main() {
 
     const { failed } = await build(opts.input, {
         theme: opts.theme,
-        autoTheme: opts.autoTheme,
         outDir: opts.outDir,
         formats,
         baseUrl: opts.baseUrl,

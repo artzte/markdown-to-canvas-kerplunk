@@ -40,8 +40,26 @@ function getBaseUrlFromPackage(pkg) {
 }
 
 /**
- * Traverses upwards from `startPath` looking for package.json or kerplunk config files.
- * Returns { baseUrl, configDir, source } or null.
+ * Extracts a theme setting from a parsed package.json object.
+ * Priority:
+ * 1. kerplunk.theme
+ * 2. theme
+ */
+function getThemeFromPackage(pkg) {
+    if (!pkg || typeof pkg !== 'object') return null;
+
+    if (pkg.kerplunk && typeof pkg.kerplunk === 'object' && typeof pkg.kerplunk.theme === 'string') {
+        return pkg.kerplunk.theme;
+    }
+    if (typeof pkg.theme === 'string') {
+        return pkg.theme;
+    }
+    return null;
+}
+
+/**
+ * Traverses upwards from `startPath` looking for a package.json or kerplunk config file
+ * that sets a baseUrl or theme. Returns { baseUrl, theme, configDir, source } or null.
  */
 function findProjectConfig(startPath) {
     if (!startPath) return null;
@@ -58,31 +76,43 @@ function findProjectConfig(startPath) {
     const rootDir = path.parse(currentDir).root;
 
     while (currentDir && currentDir !== rootDir) {
-        // 1. Check package.json
-        const pkgPath = path.join(currentDir, 'package.json');
-        if (fs.existsSync(pkgPath)) {
-            try {
-                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-                const baseUrl = getBaseUrlFromPackage(pkg);
-                if (baseUrl) {
-                    return { baseUrl, configDir: currentDir, source: 'package.json' };
-                }
-            } catch {}
-        }
+        let dirBaseUrl = null;
+        let dirTheme = null;
+        let dirSource = null;
 
-        // 2. Check dedicated config files
+        // 1. Check dedicated config files first (.kerplunkrc, kerplunk.config.json)
         const configFiles = ['.kerplunkrc', 'kerplunk.config.json'];
         for (const cfgName of configFiles) {
             const cfgPath = path.join(currentDir, cfgName);
             if (fs.existsSync(cfgPath)) {
                 try {
                     const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-                    const baseUrl = cfg.baseUrl || cfg.baseURL || cfg.base_url;
-                    if (baseUrl) {
-                        return { baseUrl, configDir: currentDir, source: cfgName };
-                    }
+                    dirBaseUrl = cfg.baseUrl || cfg.baseURL || cfg.base_url || null;
+                    dirTheme = typeof cfg.theme === 'string' ? cfg.theme : null;
+                    dirSource = cfgName;
+                    break;
                 } catch {}
             }
+        }
+
+        // 2. Supplement from package.json in the same directory if needed
+        const pkgPath = path.join(currentDir, 'package.json');
+        if (fs.existsSync(pkgPath)) {
+            try {
+                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+                if (!dirBaseUrl) dirBaseUrl = getBaseUrlFromPackage(pkg);
+                if (!dirTheme) dirTheme = getThemeFromPackage(pkg);
+                if (!dirSource) dirSource = 'package.json';
+            } catch {}
+        }
+
+        if (dirBaseUrl || dirTheme) {
+            return {
+                baseUrl: dirBaseUrl,
+                theme: dirTheme,
+                configDir: currentDir,
+                source: dirSource
+            };
         }
 
         // Stop if at a git root
@@ -97,15 +127,41 @@ function findProjectConfig(startPath) {
 
     // Also check process.cwd() as fallback
     const cwd = path.resolve(process.cwd());
+    let cwdBaseUrl = null;
+    let cwdTheme = null;
+    let cwdSource = null;
+
+    const cwdConfigFiles = ['.kerplunkrc', 'kerplunk.config.json'];
+    for (const cfgName of cwdConfigFiles) {
+        const cfgPath = path.join(cwd, cfgName);
+        if (fs.existsSync(cfgPath)) {
+            try {
+                const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+                cwdBaseUrl = cfg.baseUrl || cfg.baseURL || cfg.base_url || null;
+                cwdTheme = typeof cfg.theme === 'string' ? cfg.theme : null;
+                cwdSource = `${cfgName} (cwd)`;
+                break;
+            } catch {}
+        }
+    }
+
     const cwdPkgPath = path.join(cwd, 'package.json');
     if (fs.existsSync(cwdPkgPath)) {
         try {
             const pkg = JSON.parse(fs.readFileSync(cwdPkgPath, 'utf8'));
-            const baseUrl = getBaseUrlFromPackage(pkg);
-            if (baseUrl) {
-                return { baseUrl, configDir: cwd, source: 'package.json (cwd)' };
-            }
+            if (!cwdBaseUrl) cwdBaseUrl = getBaseUrlFromPackage(pkg);
+            if (!cwdTheme) cwdTheme = getThemeFromPackage(pkg);
+            if (!cwdSource) cwdSource = 'package.json (cwd)';
         } catch {}
+    }
+
+    if (cwdBaseUrl || cwdTheme) {
+        return {
+            baseUrl: cwdBaseUrl,
+            theme: cwdTheme,
+            configDir: cwd,
+            source: cwdSource
+        };
     }
 
     return null;
@@ -176,6 +232,7 @@ function rewriteHtmlAnchors(html, baseUrl, docRelDir = '') {
 module.exports = {
     normalizeBaseUrl,
     getBaseUrlFromPackage,
+    getThemeFromPackage,
     findProjectConfig,
     resolveAnchorHref,
     rewriteHtmlAnchors

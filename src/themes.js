@@ -3,17 +3,8 @@ const path = require('path');
 const postcss = require('postcss');
 const cssVariables = require('postcss-css-variables');
 
-// Pre-flattened themes embedded by scripts/build-themes.js, used by the bundled
-// binary when the themes/ folder isn't on disk.
-let builtinThemes = {};
-try {
-    builtinThemes = require('./themes-data.js');
-} catch {
-    // Not built yet; themes load from themes/ instead.
-}
-
+// Reference directory for example starter themes bundled with kerplunk
 const THEMES_DIR = path.resolve(__dirname, '..', 'themes');
-const USER_THEMES_DIR = path.join(process.env.HOME || '', '.config', 'kerplunk', 'themes');
 
 /**
  * Turns raw theme CSS into something juice can inline: CSS variables are resolved
@@ -39,61 +30,68 @@ async function flattenThemeCss(rawCss, from) {
 }
 
 /**
- * Finds a theme by name or path. Search order: cwd, cwd/themes, the source file's
- * folder, its themes/ subfolder, the bundled themes/, ~/.config/kerplunk/themes,
- * then the embedded built-ins.
+ * Resolves a user-specified theme file path.
+ * Checks relative to `baseDir` (e.g. project config folder or cwd) and cwd.
  */
-async function resolveTheme(themeName, baseDir) {
-    const candidateFile = themeName.endsWith('.css') ? themeName : `${themeName}.css`;
+async function resolveTheme(themePath, baseDir = process.cwd()) {
+    if (!themePath || typeof themePath !== 'string') {
+        throw new Error('No theme path specified.');
+    }
 
-    const checkPaths = [
-        path.resolve(process.cwd(), candidateFile),
-        path.resolve(process.cwd(), 'themes', candidateFile),
-        path.resolve(baseDir, candidateFile),
-        path.resolve(baseDir, 'themes', candidateFile),
-        path.join(THEMES_DIR, candidateFile),
-        path.join(USER_THEMES_DIR, candidateFile)
-    ];
+    const candidateFiles = [themePath];
+    if (!themePath.endsWith('.css')) {
+        candidateFiles.push(`${themePath}.css`);
+    }
 
-    for (const p of checkPaths) {
-        if (fs.existsSync(p)) {
-            return flattenThemeCss(fs.readFileSync(p, 'utf8'), p);
+    const checkDirs = [baseDir];
+    if (path.resolve(baseDir) !== path.resolve(process.cwd())) {
+        checkDirs.push(process.cwd());
+    }
+
+    for (const dir of checkDirs) {
+        for (const candidate of candidateFiles) {
+            const p = path.resolve(dir, candidate);
+            if (fs.existsSync(p) && fs.statSync(p).isFile()) {
+                return flattenThemeCss(fs.readFileSync(p, 'utf8'), p);
+            }
         }
     }
 
-    if (builtinThemes[themeName]) {
-        return builtinThemes[themeName];
-    }
-
-    throw new Error(`Theme '${themeName}' not found. Run 'kerplunk --list-themes' to view available themes.`);
+    const searchedLocations = checkDirs.map(d => `  • ${path.resolve(d, candidateFiles[0])}`).join('\n');
+    throw new Error(
+        `Theme file '${themePath}' not found.\nSearched in:\n${searchedLocations}\n` +
+        `Please provide a valid CSS file path or see 'kerplunk --list-themes' for starter examples.`
+    );
 }
 
 const themeCache = new Map();
 
-async function loadTheme(themeName, baseDir) {
-    const cacheKey = `${themeName}:${baseDir}`;
+async function loadTheme(themePath, baseDir = process.cwd()) {
+    const cacheKey = `${themePath}:${baseDir}`;
     if (!themeCache.has(cacheKey)) {
-        themeCache.set(cacheKey, await resolveTheme(themeName, baseDir));
+        themeCache.set(cacheKey, await resolveTheme(themePath, baseDir));
     }
     return themeCache.get(cacheKey);
 }
 
+/**
+ * Lists sample themes provided with kerplunk as starting examples.
+ */
 function listThemes() {
-    if (Object.keys(builtinThemes).length > 0) {
-        return Object.keys(builtinThemes);
-    }
     try {
-        return fs.readdirSync(THEMES_DIR)
-            .filter(f => f.endsWith('.css'))
-            .map(f => path.basename(f, '.css'));
-    } catch {
-        return [];
-    }
+        if (fs.existsSync(THEMES_DIR)) {
+            return fs.readdirSync(THEMES_DIR)
+                .filter(f => f.endsWith('.css'))
+                .map(f => path.basename(f, '.css'));
+        }
+    } catch {}
+    return [];
 }
 
 module.exports = {
     THEMES_DIR,
     flattenThemeCss,
+    resolveTheme,
     loadTheme,
     listThemes
 };

@@ -115,8 +115,13 @@ console.log(answer);
     const mdFile = path.join(tmpDir, 'test-doc.md');
     fs.writeFileSync(mdFile, mdContent, 'utf8');
 
+    // Copy sample theme into test directory
+    const sampleArtzt = path.resolve(__dirname, '..', 'themes', 'artzt.css');
+    fs.copyFileSync(sampleArtzt, path.join(tmpDir, 'artzt.css'));
+
     const kerplunkBin = path.resolve(__dirname, '..', 'bin', 'kerplunk.js');
-    execFileSync('node', [kerplunkBin, mdFile, 'artzt', '--html-only', '-o', tmpDir], {
+    execFileSync('node', [kerplunkBin, mdFile, 'artzt.css', '--html-only', '-o', tmpDir], {
+        cwd: tmpDir,
         encoding: 'utf8'
     });
 
@@ -152,8 +157,10 @@ console.log(answer);
     // 8. End-to-End library build() test
     console.log('🧪 Running End-to-End library build() test...');
     const libOutDir = path.join(tmpDir, 'lib-out');
+    const sampleSimple = path.resolve(__dirname, '..', 'themes', 'simple.css');
+    fs.copyFileSync(sampleSimple, path.join(tmpDir, 'simple.css'));
 
-    build(mdFile, { theme: 'simple', outDir: libOutDir, formats: ['html'], appendTheme: true }).then(() => {
+    build(mdFile, { theme: path.join(tmpDir, 'simple.css'), outDir: libOutDir, formats: ['html'], appendTheme: true }).then(() => {
         const libHtmlPath = path.join(libOutDir, 'test-doc_simple.html');
         assert(fs.existsSync(libHtmlPath), 'build() must produce output file');
         const libHtml = fs.readFileSync(libHtmlPath, 'utf8');

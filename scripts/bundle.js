@@ -4,10 +4,7 @@ const esbuild = require('esbuild');
 const { execSync } = require('child_process');
 
 async function bundle() {
-    console.log('📦 Step 1: Pre-compiling themes...');
-    execSync('node scripts/build-themes.js', { stdio: 'inherit' });
-
-    console.log('⚡ Step 2: Bundling kerplunk CLI with esbuild...');
+    console.log('⚡ Bundling kerplunk CLI with esbuild...');
     const distDir = path.join(__dirname, '..', 'dist');
     if (!fs.existsSync(distDir)) {
         fs.mkdirSync(distDir, { recursive: true });
