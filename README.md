@@ -51,6 +51,16 @@ kerplunk --list-themes                         # list sample starter themes
 kerplunk --help
 ```
 
+### Markdown Only (Word / DOCX Migration)
+
+Kerplunk is intentionally opinionated and only compiles Markdown (`.md`, `.markdown`) source files to maintain clean version control, semantic markup, and reliable Canvas accessibility.
+
+If you have legacy Microsoft Word (`.docx`) course materials, convert them to Markdown first using Pandoc before processing them with Kerplunk:
+
+```bash
+pandoc document.docx -f docx -t gfm -o document.md
+```
+
 ### Themes (optional)
 
 By default, kerplunk outputs plain, semantic HTML styled directly by your Canvas theme.
