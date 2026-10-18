@@ -18,6 +18,8 @@ const {
     normalizeBaseUrl,
     getBaseUrlFromPackage,
     getThemeFromPackage,
+    normalizeFormats,
+    getFormatsFromPackage,
     findProjectConfig,
     resolveAnchorHref,
     rewriteHtmlAnchors
@@ -48,6 +50,9 @@ module.exports = {
     // Link & URL resolution
     normalizeBaseUrl,
     getBaseUrlFromPackage,
+    getThemeFromPackage,
+    normalizeFormats,
+    getFormatsFromPackage,
     findProjectConfig,
     resolveAnchorHref,
     rewriteHtmlAnchors,

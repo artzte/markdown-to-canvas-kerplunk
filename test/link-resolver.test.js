@@ -6,6 +6,8 @@ const {
     normalizeBaseUrl,
     getBaseUrlFromPackage,
     getThemeFromPackage,
+    normalizeFormats,
+    getFormatsFromPackage,
     findProjectConfig,
     resolveAnchorHref,
     rewriteHtmlAnchors
@@ -36,6 +38,22 @@ assert.strictEqual(getThemeFromPackage({ kerplunk: { theme: 'my-theme.css' } }),
 assert.strictEqual(getThemeFromPackage({ kerplunk: { theme: 'my-theme.css' }, theme: 'pkg-theme.css' }), 'my-theme.css');
 assert.strictEqual(getThemeFromPackage({}), null);
 console.log('  ✅ getThemeFromPackage passed');
+
+// 2c. normalizeFormats
+assert.deepStrictEqual(normalizeFormats(['html', 'pdf']), ['html', 'pdf']);
+assert.deepStrictEqual(normalizeFormats(['HTML', 'PDF']), ['html', 'pdf']);
+assert.deepStrictEqual(normalizeFormats(['html', 'docx', 'xyz']), ['html']);
+assert.deepStrictEqual(normalizeFormats('pdf'), ['pdf']);
+assert.deepStrictEqual(normalizeFormats([]), null);
+assert.deepStrictEqual(normalizeFormats(null), null);
+console.log('  ✅ normalizeFormats passed');
+
+// 2d. getFormatsFromPackage
+assert.deepStrictEqual(getFormatsFromPackage({ formats: ['html', 'pdf'] }), ['html', 'pdf']);
+assert.deepStrictEqual(getFormatsFromPackage({ kerplunk: { formats: ['pdf'] } }), ['pdf']);
+assert.deepStrictEqual(getFormatsFromPackage({ kerplunk: { formats: ['pdf'] }, formats: ['html'] }), ['pdf']);
+assert.deepStrictEqual(getFormatsFromPackage({}), null);
+console.log('  ✅ getFormatsFromPackage passed');
 
 // 3. resolveAnchorHref
 const base = 'https://username.github.io/my-course';
@@ -129,7 +147,7 @@ assert.strictEqual(config.source, 'package.json');
 fs.rmSync(path.join(tmpDir, 'package.json'));
 fs.writeFileSync(
     path.join(tmpDir, 'kerplunk.config.json'),
-    JSON.stringify({ baseUrl: 'https://prof.edu/class', theme: 'custom-theme.css' }),
+    JSON.stringify({ baseUrl: 'https://prof.edu/class', theme: 'custom-theme.css', formats: ['html', 'pdf'] }),
     'utf8'
 );
 
@@ -137,6 +155,7 @@ const configJson = findProjectConfig(subDir);
 assert(configJson !== null);
 assert.strictEqual(configJson.baseUrl, 'https://prof.edu/class');
 assert.strictEqual(configJson.theme, 'custom-theme.css');
+assert.deepStrictEqual(configJson.formats, ['html', 'pdf']);
 assert.strictEqual(configJson.configDir, tmpDir);
 assert.strictEqual(configJson.source, 'kerplunk.config.json');
 
@@ -234,7 +253,7 @@ fs.writeFileSync(
 );
 
 // Execute from inside the subfolder without specifying theme on CLI
-execFileSync('node', [kerplunkBin, 'week1.md', '--html-only'], {
+execFileSync('node', [kerplunkBin, 'week1.md'], {
     cwd: cliPagesDir,
     encoding: 'utf8'
 });
@@ -243,6 +262,43 @@ assert(fs.existsSync(generatedHtmlPath), 'HTML file must be created using theme 
 const configThemedHtml = fs.readFileSync(generatedHtmlPath, 'utf8');
 assert(configThemedHtml.includes('<div class="kerplunk"'), 'Should be wrapped in kerplunk scope div from config theme');
 console.log('  ✅ End-to-end kerplunk CLI with kerplunk.config.json theme passed');
+
+// 10. End-to-End CLI test with kerplunk.config.json "formats" setting
+fs.rmSync(generatedHtmlPath, { force: true });
+fs.writeFileSync(
+    path.join(cliTestDir, 'kerplunk.config.json'),
+    JSON.stringify({
+        baseUrl: 'https://username.github.io/my-course',
+        theme: 'simple.css',
+        formats: ['html', 'pdf']
+    }),
+    'utf8'
+);
+
+const generatedPdfPath = path.join(cliPagesDir, 'week1.pdf');
+fs.rmSync(generatedPdfPath, { force: true });
+
+execFileSync('node', [kerplunkBin, 'week1.md'], {
+    cwd: cliPagesDir,
+    encoding: 'utf8'
+});
+
+assert(fs.existsSync(generatedHtmlPath), 'HTML file must be created from config formats');
+assert(fs.existsSync(generatedPdfPath), 'PDF file must be created from config formats');
+console.log('  ✅ End-to-end kerplunk CLI with kerplunk.config.json formats passed');
+
+// 11. End-to-End CLI test with --html-only overriding config formats
+fs.rmSync(generatedHtmlPath, { force: true });
+fs.rmSync(generatedPdfPath, { force: true });
+
+execFileSync('node', [kerplunkBin, 'week1.md', '--html-only'], {
+    cwd: cliPagesDir,
+    encoding: 'utf8'
+});
+
+assert(fs.existsSync(generatedHtmlPath), 'HTML file must be created');
+assert(!fs.existsSync(generatedPdfPath), 'PDF file must not be created when --html-only overrides config formats');
+console.log('  ✅ End-to-end kerplunk CLI --html-only overrides config formats passed');
 
 // Cleanup
 fs.rmSync(cliTestDir, { recursive: true, force: true });

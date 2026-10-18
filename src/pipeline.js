@@ -277,7 +277,7 @@ async function build(inputPath, options = {}) {
     const {
         theme: requestedTheme = null,
         outDir = null,
-        formats = ['html'],
+        formats: requestedFormats = null,
         baseUrl = null,
         ...fileOptions
     } = options;
@@ -295,12 +295,23 @@ async function build(inputPath, options = {}) {
     if (!hasCommand('pandoc')) {
         throw new Error(`'pandoc' was not found on PATH. Install it from https://pandoc.org/installing.html`);
     }
-    const hasWkhtmltopdf = formats.includes('pdf') && hasCommand('wkhtmltopdf');
 
     const resolvedOutDir = outDir ? path.resolve(outDir) : null;
     const projectConfig = findProjectConfig(resolvedInputPath);
     const explicitBaseUrl = baseUrl || process.env.KERPLUNK_BASE_URL || null;
     const effectiveBaseUrl = explicitBaseUrl || (projectConfig ? projectConfig.baseUrl : null);
+
+    // Formats resolution:
+    // 1. Explicit option passed to build() / CLI flag
+    // 2. Project config ("formats" in kerplunk.config.json or package.json)
+    // 3. Default: ['html']
+    const effectiveFormats = (requestedFormats && requestedFormats.length > 0)
+        ? requestedFormats
+        : (projectConfig && projectConfig.formats && projectConfig.formats.length > 0)
+            ? projectConfig.formats
+            : ['html'];
+
+    const hasWkhtmltopdf = effectiveFormats.includes('pdf') && hasCommand('wkhtmltopdf');
 
     // Theme resolution:
     // 1. Explicit CLI / build() option -> resolved relative to process.cwd()
@@ -341,6 +352,10 @@ async function build(inputPath, options = {}) {
         const source = !explicitBaseUrl && projectConfig ? ` (from ${projectConfig.source})` : '';
         console.log(`   🔗 Base URL: ${effectiveBaseUrl}${source}`);
     }
+    if (effectiveFormats.length > 1 || !effectiveFormats.includes('html')) {
+        const source = (!requestedFormats || requestedFormats.length === 0) && projectConfig && projectConfig.formats ? ` (from ${projectConfig.source})` : '';
+        console.log(`   📄 Formats:  ${effectiveFormats.join(', ')}${source}`);
+    }
     console.log(resolvedOutDir
         ? `   📂 Output: ${resolvedOutDir}\n`
         : `   📂 Output: In-place (next to source files)\n`);
@@ -370,7 +385,7 @@ async function build(inputPath, options = {}) {
             await convertFile(file, loadedTheme, fileOutDir, {
                 ...fileOptions,
                 themeName: themeStem,
-                formats,
+                formats: effectiveFormats,
                 hasWkhtmltopdf,
                 baseUrl: effectiveBaseUrl,
                 docRelDir: docRelDirFor(file, projectConfig, fallbackRoot),

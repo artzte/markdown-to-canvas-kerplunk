@@ -72,6 +72,22 @@ Relative links are rewritten when a base URL is known. In priority order:
 The search walks up from the input and stops at the git root. Links resolve relative to the folder
 containing that config.
 
+### Project Configuration (`kerplunk.config.json`)
+
+You can create a `kerplunk.config.json` (or `.kerplunkrc` or in `package.json` under `"kerplunk"`) in your course root:
+
+```json
+{
+  "theme": "artzt.css",
+  "baseUrl": "https://username.github.io/my-course",
+  "formats": ["html", "pdf"]
+}
+```
+
+- **`theme`**: default theme CSS to inline.
+- **`baseUrl`**: base URL to rewrite relative links against.
+- **`formats`**: default outputs to generate (e.g. `["html"]`, `["html", "pdf"]`, or `["pdf"]`). CLI flags (`--pdf`, `--pdf-only`, `--html-only`) override this setting.
+
 ## Library
 
 ```js
