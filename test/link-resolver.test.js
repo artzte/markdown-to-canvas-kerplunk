@@ -49,6 +49,15 @@ assert.strictEqual(
     resolveAnchorHref('../other-folder/boo.md', base, 'pages/week-1'),
     'https://username.github.io/my-course/pages/other-folder/boo.md'
 );
+// Windows-style backslashes in docRelDir
+assert.strictEqual(
+    resolveAnchorHref('../other-folder/boo.md', base, 'pages\\week-1'),
+    'https://username.github.io/my-course/pages/other-folder/boo.md'
+);
+assert.strictEqual(
+    resolveAnchorHref('boo.md', base, 'pages\\week-1'),
+    'https://username.github.io/my-course/pages/week-1/boo.md'
+);
 assert.strictEqual(
     resolveAnchorHref('boo.md', base, 'pages'),
     'https://username.github.io/my-course/pages/boo.md'

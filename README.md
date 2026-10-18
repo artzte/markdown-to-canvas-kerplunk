@@ -22,13 +22,21 @@ Derived from [Living Syllabus](https://github.com/ryanncode/living-syllabus) by 
 
 - Node.js 18+
 - [pandoc](https://pandoc.org/installing.html) on `PATH`
-- optional: `wkhtmltopdf` for PDFs that match the theme
+  - Linux: `sudo apt install pandoc`
+  - macOS: `brew install pandoc`
+  - Windows: `winget install JohnMacFarlane.Pandoc` (or `choco install pandoc` / `scoop install pandoc`)
+- optional: `wkhtmltopdf` for PDFs that match the theme (`sudo apt install wkhtmltopdf` or `winget install wkhtmltopdf`)
 
 ## Install
 
 ```bash
 npm install
-npm run install-cli   # bundles to dist/kerplunk and copies it to ~/.local/bin/kerplunk
+npm run install-cli   # bundles to dist/kerplunk and installs to user PATH (~/.local/bin)
+```
+
+Alternatively, link globally via npm (creates native Windows `.cmd`/`.ps1` wrappers or Unix symlinks):
+```bash
+npm link
 ```
 
 ## Usage

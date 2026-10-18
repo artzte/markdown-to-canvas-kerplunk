@@ -7,7 +7,7 @@ const {
     enhanceCodeAccessibility,
     getPandocHighlightArgs
 } = require('../src/code-accessibility.js');
-const { build } = require('../index.js');
+const { build, hasCommand } = require('../index.js');
 
 console.log('🧪 Testing code-accessibility.js...');
 
@@ -88,6 +88,12 @@ const highlightArgs = getPandocHighlightArgs();
 assert(Array.isArray(highlightArgs), 'Must return array of args');
 assert(highlightArgs.includes('--syntax-highlighting=none') || highlightArgs.includes('--no-highlight'), 'Must return valid syntax highlighting disable flag');
 console.log('  ✅ getPandocHighlightArgs passed');
+
+// 6b. hasCommand check
+assert.strictEqual(hasCommand('node'), true, 'node must be found on PATH');
+assert.strictEqual(hasCommand('pandoc'), true, 'pandoc must be found on PATH');
+assert.strictEqual(hasCommand('nonexistent_command_xyz_12345'), false, 'nonexistent command must not be found');
+console.log('  ✅ hasCommand passed');
 
 // 7. End-to-End kerplunk CLI test with code sample
 console.log('🧪 Running End-to-End kerplunk CLI code block test...');

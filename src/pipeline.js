@@ -23,11 +23,19 @@ function isMarkdownFile(filePath) {
 }
 
 function hasCommand(cmd) {
+    const isWin = process.platform === 'win32';
+    const primary = isWin ? 'where' : 'which';
+    const secondary = isWin ? 'which' : 'where';
     try {
-        execFileSync('which', [cmd], { stdio: 'ignore' });
+        execFileSync(primary, [cmd], { stdio: 'ignore' });
         return true;
     } catch {
-        return false;
+        try {
+            execFileSync(secondary, [cmd], { stdio: 'ignore' });
+            return true;
+        } catch {
+            return false;
+        }
     }
 }
 
@@ -242,7 +250,7 @@ async function convertFile(inputPath, theme, outputDir, options = {}) {
                 console.log(`${indent}✅ Standalone PDF: ${pdfOutputFile}`);
             } catch (err) {
                 console.error(`${indent}❌ PDF Pandoc Error: ${err.message}`);
-                console.error(`${indent}💡 Tip: Install wkhtmltopdf for PDFs that match the theme: sudo apt install wkhtmltopdf`);
+                console.error(`${indent}💡 Tip: Install wkhtmltopdf for PDFs that match the theme: sudo apt install wkhtmltopdf (Linux) or winget install wkhtmltopdf (Windows)`);
             }
         }
     }
@@ -408,5 +416,6 @@ module.exports = {
     findSourceFiles,
     renderHtml,
     convertFile,
-    build
+    build,
+    hasCommand
 };

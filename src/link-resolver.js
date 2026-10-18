@@ -73,9 +73,7 @@ function findProjectConfig(startPath) {
         currentDir = path.resolve(process.cwd());
     }
 
-    const rootDir = path.parse(currentDir).root;
-
-    while (currentDir && currentDir !== rootDir) {
+    while (currentDir) {
         let dirBaseUrl = null;
         let dirTheme = null;
         let dirSource = null;
