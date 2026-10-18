@@ -22,9 +22,9 @@ Derived from [Living Syllabus](https://github.com/ryanncode/living-syllabus) by 
 
 - Node.js 18+
 - [pandoc](https://pandoc.org/installing.html) on `PATH`
-  - Linux: `sudo apt install pandoc`
-  - macOS: `brew install pandoc`
-  - Windows: `winget install JohnMacFarlane.Pandoc` (or `choco install pandoc` / `scoop install pandoc`)
+    - Linux: `sudo apt install pandoc`
+    - macOS: `brew install pandoc`
+    - Windows: `winget install JohnMacFarlane.Pandoc` (or `choco install pandoc` / `scoop install pandoc`)
 - optional: `wkhtmltopdf` for PDFs that match the theme (`sudo apt install wkhtmltopdf` or `winget install wkhtmltopdf`)
 
 ## Install
@@ -35,6 +35,7 @@ npm run install-cli   # bundles to dist/kerplunk and installs to user PATH (~/.l
 ```
 
 Alternatively, link globally via npm (creates native Windows `.cmd`/`.ps1` wrappers or Unix symlinks):
+
 ```bash
 npm link
 ```
@@ -55,6 +56,7 @@ kerplunk --help
 By default, kerplunk outputs plain, semantic HTML styled directly by your Canvas theme.
 
 If you specify a theme, its CSS is inlined onto each element and the output is wrapped in `<div class="kerplunk">`. Themes can be set via:
+
 1. CLI option: `--theme <path>` (e.g. `--theme artzt.css` or `--theme ./themes/water.css`), resolved relative to the current working directory (`process.cwd()`).
 2. Config file: `"theme": "artzt.css"` in `kerplunk.config.json` (or `.kerplunkrc` / `package.json`), resolved relative to the folder containing the config file.
 
@@ -78,15 +80,36 @@ You can create a `kerplunk.config.json` (or `.kerplunkrc` or in `package.json` u
 
 ```json
 {
-  "theme": "artzt.css",
-  "baseUrl": "https://username.github.io/my-course",
-  "formats": ["html", "pdf"]
+    "theme": "artzt.css",
+    "baseUrl": "https://username.github.io/my-course",
+    "formats": ["html", "pdf"]
 }
 ```
 
 - **`theme`**: default theme CSS to inline.
 - **`baseUrl`**: base URL to rewrite relative links against.
 - **`formats`**: default outputs to generate (e.g. `["html"]`, `["html", "pdf"]`, or `["pdf"]`). CLI flags (`--pdf`, `--pdf-only`, `--html-only`) override this setting.
+
+### Optional PDF Generation
+
+By default, Kerplunk produces clean Canvas-ready HTML only. When you need printable syllabus or lecture handouts, you can opt into PDF output:
+
+- **Via CLI flag**:
+    - `kerplunk lecture.md --pdf` generates both `lecture.html` and `lecture.pdf`.
+    - `kerplunk lecture.md --pdf-only` generates only `lecture.pdf`.
+    - `kerplunk lecture.md --html-only` explicitly limits output to HTML (overriding config files).
+- **Via Config**: Set `"formats": ["html", "pdf"]` in `kerplunk.config.json` so `kerplunk` always generates both in that course repository.
+
+#### PDF Engines & Styling
+
+1. **`wkhtmltopdf` (Recommended - Fully Styled)**:
+   When `wkhtmltopdf` is installed on your `PATH`, Kerplunk renders the inlined HTML document through WebKit. This ensures the output PDF has standard print margins (20mm vertical, 15mm horizontal) and preserves your full CSS theme styling, table enhancements, and font choices.
+    - **Ubuntu/Debian**: `sudo apt install wkhtmltopdf`
+    - **macOS**: `brew install --cask wkhtmltopdf`
+    - **Windows**: `winget install wkhtmltopdf`
+
+2. **Pandoc Fallback**:
+   If `wkhtmltopdf` is not detected, Kerplunk falls back to Pandoc's native PDF generation (`pandoc -t pdf`), which delegates to LaTeX or Typst if installed. Note that the Pandoc fallback generates plain documents and cannot apply CSS theme styles.
 
 ## Library
 
