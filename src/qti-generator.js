@@ -32,7 +32,7 @@ function escapeXml(unsafe) {
  * Converts a markdown snippet to clean HTML.
  * Uses pandoc if available; falls back to simple paragraph wrapping.
  */
-function markdownToHtml(mdText, baseUrl = null, docRelDir = '') {
+function markdownToHtml(mdText, { baseUrl = null, docRelDir = '' } = {}) {
     if (!mdText || !mdText.trim()) return '';
     let html = '';
     try {
@@ -395,10 +395,10 @@ function createQtiZip(options) {
     const totalPoints = questions.reduce((sum, q) => sum + (q.points || 1.0), 0);
 
     // Convert markdown descriptions and prompts to HTML
-    const descriptionHtml = descriptionMarkdown ? markdownToHtml(descriptionMarkdown, baseUrl, docRelDir) : '';
+    const descriptionHtml = descriptionMarkdown ? markdownToHtml(descriptionMarkdown, { baseUrl, docRelDir }) : '';
     const questionsWithHtml = questions.map(q => ({
         ...q,
-        htmlPrompt: markdownToHtml(q.prompt, baseUrl, docRelDir)
+        htmlPrompt: markdownToHtml(q.prompt, { baseUrl, docRelDir })
     }));
 
     const manifestXml = buildManifestXml(assessmentId, title, isoDate);
