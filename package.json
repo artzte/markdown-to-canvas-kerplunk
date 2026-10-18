@@ -13,7 +13,8 @@
         "index.js"
     ],
     "scripts": {
-        "test": "node test/link-resolver.test.js && node test/code-accessibility.test.js && node test/html-simplify.test.js && node test/heading-anchors.test.js",
+        "test": "node --test",
+        "test:watch": "node --test --watch",
         "bundle": "node scripts/bundle.js",
         "install-cli": "node scripts/install-cli.js",
         "lint": "eslint .",

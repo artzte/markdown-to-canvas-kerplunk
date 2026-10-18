@@ -131,6 +131,9 @@ await build('modules', { theme: 'artzt.css', outDir: 'dist', formats: ['html'] }
 ## Development
 
 ```bash
-npm test
-npm run bundle
+npm test            # Run test suite with native node:test runner
+npm run test:watch  # Run tests in watch mode
+npm run lint        # Check code with ESLint
+npm run format      # Format code with Prettier
+npm run bundle      # Build dist standalone bundle
 ```
