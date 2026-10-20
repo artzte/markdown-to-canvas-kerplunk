@@ -5,13 +5,13 @@ const { listThemes } = require('../src/themes.js');
 
 function printHelp() {
     console.log(`
-kerplunk: Markdown/Word -> Canvas-safe HTML
+kerplunk: Markdown -> Canvas-safe HTML
 
 Usage:
   kerplunk <input-path> [theme] [options]
 
 Arguments:
-  <input-path>          Path to .md/.docx file OR folder to convert recursively
+  <input-path>          Path to .md file OR folder to convert recursively
   [theme]               Optional theme CSS path (overrides config setting)
 
 Options:
@@ -21,9 +21,9 @@ Options:
   --append-theme        Append '_<theme>' to output filenames
   -s, --scope <class>   CSS scope class for themed output (default: '${DEFAULT_SCOPE}')
   --no-wrapper          Omit the scope <div> from themed output
-  --html-only           Generate only Canvas-safe HTML
+  --pdf                 Also generate styled PDF (via wkhtmltopdf if installed)
   --pdf-only            Generate only styled PDF
-  --docx                Also generate standalone DOCX
+  --html-only           Generate only Canvas-safe HTML (default)
   --no-qti              Disable auto Canvas QTI .zip generation for quiz files
   --no-anchors          Don't add "#" section links to headings
   --list-themes         List sample starter themes provided with kerplunk
@@ -35,7 +35,6 @@ Examples:
   kerplunk content/ -o dist/
   kerplunk content/ artzt.css -o ./dist
   kerplunk syllabus/syllabus.md --theme=themes/artzt.css
-  kerplunk document.docx my-theme.css -o ./dist
 `);
 }
 
@@ -49,7 +48,7 @@ function parseArgs(args) {
         appendTheme: false,
         htmlOnly: false,
         pdfOnly: false,
-        includeDocx: false,
+        pdf: false,
         noQti: false,
         noAnchors: false,
         baseUrl: null
@@ -70,9 +69,9 @@ function parseArgs(args) {
         else if (arg.startsWith('--scope=')) opts.scopeClass = stripDot(valueOf(arg));
         else if (arg === '--no-wrapper') opts.noWrapper = true;
         else if (arg === '--append-theme') opts.appendTheme = true;
-        else if (arg === '--html-only') opts.htmlOnly = true;
+        else if (arg === '--pdf') opts.pdf = true;
         else if (arg === '--pdf-only') opts.pdfOnly = true;
-        else if (arg === '--docx') opts.includeDocx = true;
+        else if (arg === '--html-only') opts.htmlOnly = true;
         else if (arg === '--no-qti') opts.noQti = true;
         else if (arg === '--no-anchors') opts.noAnchors = true;
         else if (arg.startsWith('-')) {
@@ -97,7 +96,7 @@ async function main() {
     }
     if (args.includes('--list-themes')) {
         console.log('\n🎨 Sample Themes (provided in kerplunk/themes/):');
-        listThemes().forEach(t => console.log(`  • ${t} (${t}.css)`));
+        listThemes().forEach((t) => console.log(`  • ${t} (${t}.css)`));
         console.log('\nCopy any sample theme to your course folder and configure it in kerplunk.config.json:');
         console.log('  { "theme": "my-theme.css" }');
         console.log('Or specify it via CLI: --theme my-theme.css\n');
@@ -111,11 +110,10 @@ async function main() {
         process.exit(1);
     }
 
-    let formats;
+    let formats = undefined;
     if (opts.pdfOnly) formats = ['pdf'];
+    else if (opts.pdf) formats = ['html', 'pdf'];
     else if (opts.htmlOnly) formats = ['html'];
-    else formats = ['html', 'pdf'];
-    if (opts.includeDocx && !formats.includes('docx')) formats.push('docx');
 
     const { failed } = await build(opts.input, {
         theme: opts.theme,
@@ -133,7 +131,7 @@ async function main() {
     }
 }
 
-main().catch(err => {
+main().catch((err) => {
     console.error(`❌ Error: ${err.message || err}`);
     process.exit(1);
 });

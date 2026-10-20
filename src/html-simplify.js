@@ -13,12 +13,26 @@
  */
 
 const PANDOC_CLASSES = new Set([
-    'level1', 'level2', 'level3', 'level4', 'level5', 'level6',
+    'level1',
+    'level2',
+    'level3',
+    'level4',
+    'level5',
+    'level6',
     'task-list',
-    'footnotes', 'footnotes-end-of-document', 'footnote-ref', 'footnote-back',
-    'math', 'inline', 'display',
-    'header', 'odd', 'even',
-    'uri', 'email', 'smallcaps',
+    'footnotes',
+    'footnotes-end-of-document',
+    'footnote-ref',
+    'footnote-back',
+    'math',
+    'inline',
+    'display',
+    'header',
+    'odd',
+    'even',
+    'uri',
+    'email',
+    'smallcaps',
     'sourceCode'
 ]);
 
@@ -35,7 +49,7 @@ function simplifyHtml(html) {
     );
 
     const linkedIds = new Set(
-        [...result.matchAll(/\bhref\s*=\s*["']#([^"']+)["']/gi)].map(m => decodeURIComponent(m[1]))
+        [...result.matchAll(/\bhref\s*=\s*["']#([^"']+)["']/gi)].map((m) => decodeURIComponent(m[1]))
     );
 
     result = result.replace(/<([a-zA-Z][a-zA-Z0-9]*)(\s[^>]*?)?(\s*\/?)>/g, (match, tag, attrs, close) => {
@@ -50,15 +64,18 @@ function simplifyHtml(html) {
             const value = m[2] ?? m[3] ?? m[4];
 
             if (lowerName === 'class' && value !== undefined) {
-                const classes = value.split(/\s+/).filter(c => c && !PANDOC_CLASSES.has(c));
+                const classes = value.split(/\s+/).filter((c) => c && !PANDOC_CLASSES.has(c));
                 if (classes.length > 0) kept.push(`class="${classes.join(' ')}"`);
                 changed = changed || classes.join(' ') !== value;
                 continue;
             }
-            if ((lowerName === 'id' && value !== undefined && !linkedIds.has(value)) ||
-                ((tagName === 'td' || tagName === 'th') && lowerName === 'style' &&
+            if (
+                (lowerName === 'id' && value !== undefined && !linkedIds.has(value)) ||
+                ((tagName === 'td' || tagName === 'th') &&
+                    lowerName === 'style' &&
                     /^\s*text-align:\s*left;?\s*$/i.test(value || '')) ||
-                (tagName === 'ol' && lowerName === 'type' && value === '1')) {
+                (tagName === 'ol' && lowerName === 'type' && value === '1')
+            ) {
                 changed = true;
                 continue;
             }

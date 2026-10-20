@@ -15,16 +15,17 @@ async function flattenThemeCss(rawCss, from) {
     const licenseMatch = rawCss.match(/\/\*[\s\S]*?(?:Theme|Copyright|License)[\s\S]*?\*\//i);
     let licenseHeader = '';
     if (licenseMatch) {
-        const cleanText = licenseMatch[0].replace(/\/\*!?/, '').replace(/\*\//, '').trim();
+        const cleanText = licenseMatch[0]
+            .replace(/\/\*!?/, '')
+            .replace(/\*\//, '')
+            .trim();
         licenseHeader = `<!-- ${cleanText} -->`;
     }
 
     let sanitizedCss = rawCss.replace(/:host/g, ':root');
     sanitizedCss = sanitizedCss.replace(/url\("data:[^"]+"\)/g, 'none');
 
-    const result = await postcss([
-        cssVariables({ preserve: false })
-    ]).process(sanitizedCss, { from, to: undefined });
+    const result = await postcss([cssVariables({ preserve: false })]).process(sanitizedCss, { from, to: undefined });
 
     return { css: result.css, licenseHeader };
 }
@@ -57,10 +58,10 @@ async function resolveTheme(themePath, baseDir = process.cwd()) {
         }
     }
 
-    const searchedLocations = checkDirs.map(d => `  • ${path.resolve(d, candidateFiles[0])}`).join('\n');
+    const searchedLocations = checkDirs.map((d) => `  • ${path.resolve(d, candidateFiles[0])}`).join('\n');
     throw new Error(
         `Theme file '${themePath}' not found.\nSearched in:\n${searchedLocations}\n` +
-        `Please provide a valid CSS file path or see 'kerplunk --list-themes' for starter examples.`
+            `Please provide a valid CSS file path or see 'kerplunk --list-themes' for starter examples.`
     );
 }
 
@@ -80,9 +81,10 @@ async function loadTheme(themePath, baseDir = process.cwd()) {
 function listThemes() {
     try {
         if (fs.existsSync(THEMES_DIR)) {
-            return fs.readdirSync(THEMES_DIR)
-                .filter(f => f.endsWith('.css'))
-                .map(f => path.basename(f, '.css'));
+            return fs
+                .readdirSync(THEMES_DIR)
+                .filter((f) => f.endsWith('.css'))
+                .map((f) => path.basename(f, '.css'));
         }
     } catch {}
     return [];

@@ -27,17 +27,14 @@ function enhanceTableAccessibility(html) {
                 const theadSection = tableInner.match(/<thead\b[^>]*>([\s\S]*?)<\/thead>/i);
                 const searchScope = theadSection
                     ? theadSection[1]
-                    : (tableInner.match(/<tr\b[^>]*>([\s\S]*?)<\/tr>/i)?.[1] || tableInner);
+                    : tableInner.match(/<tr\b[^>]*>([\s\S]*?)<\/tr>/i)?.[1] || tableInner;
 
                 const headerMatches = [...searchScope.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)];
-                const headers = headerMatches
-                    .map(m => m[1].replace(/<[^>]+>/g, '').trim())
-                    .filter(Boolean);
+                const headers = headerMatches.map((m) => m[1].replace(/<[^>]+>/g, '').trim()).filter(Boolean);
 
                 if (headers.length > 0) {
-                    const headerList = headers.length > 4
-                        ? headers.slice(0, 4).join(', ') + ', etc.'
-                        : headers.join(', ');
+                    const headerList =
+                        headers.length > 4 ? headers.slice(0, 4).join(', ') + ', etc.' : headers.join(', ');
                     captionText = `Table: ${headerList}`;
                 } else {
                     captionText = 'Data Table';
@@ -54,30 +51,39 @@ function enhanceTableAccessibility(html) {
         }
 
         // Add scope="col" to <th> in <thead>
-        updatedInner = updatedInner.replace(/<thead\b([^>]*)>([\s\S]*?)<\/thead>/gi, (theadMatch, theadAttrs, theadInner) => {
-            const updatedThead = theadInner.replace(/<th\b([^>]*)>/gi, (thMatch, thAttrs) => {
-                if (/scope\s*=/i.test(thAttrs)) return thMatch;
-                return `<th scope="col"${thAttrs}>`;
-            });
-            return `<thead${theadAttrs}>${updatedThead}</thead>`;
-        });
+        updatedInner = updatedInner.replace(
+            /<thead\b([^>]*)>([\s\S]*?)<\/thead>/gi,
+            (theadMatch, theadAttrs, theadInner) => {
+                const updatedThead = theadInner.replace(/<th\b([^>]*)>/gi, (thMatch, thAttrs) => {
+                    if (/scope\s*=/i.test(thAttrs)) return thMatch;
+                    return `<th scope="col"${thAttrs}>`;
+                });
+                return `<thead${theadAttrs}>${updatedThead}</thead>`;
+            }
+        );
 
         // Add scope="col" (first row) or scope="row" (subsequent rows) to <th> inside <tbody>
         const hasThead = /<thead\b/i.test(tableInner);
         let rowIndex = 0;
-        updatedInner = updatedInner.replace(/<tbody\b([^>]*)>([\s\S]*?)<\/tbody>/gi, (tbodyMatch, tbodyAttrs, tbodyInner) => {
-            const updatedTbody = tbodyInner.replace(/<tr\b([^>]*)>([\s\S]*?)<\/tr>/gi, (trMatch, trAttrs, trInner) => {
-                const isFirstRowWithoutThead = !hasThead && rowIndex === 0;
-                rowIndex++;
-                const updatedTr = trInner.replace(/<th\b([^>]*)>/gi, (thMatch, thAttrs) => {
-                    if (/scope\s*=/i.test(thAttrs)) return thMatch;
-                    const scopeVal = isFirstRowWithoutThead ? 'col' : 'row';
-                    return `<th scope="${scopeVal}"${thAttrs}>`;
-                });
-                return `<tr${trAttrs}>${updatedTr}</tr>`;
-            });
-            return `<tbody${tbodyAttrs}>${updatedTbody}</tbody>`;
-        });
+        updatedInner = updatedInner.replace(
+            /<tbody\b([^>]*)>([\s\S]*?)<\/tbody>/gi,
+            (tbodyMatch, tbodyAttrs, tbodyInner) => {
+                const updatedTbody = tbodyInner.replace(
+                    /<tr\b([^>]*)>([\s\S]*?)<\/tr>/gi,
+                    (trMatch, trAttrs, trInner) => {
+                        const isFirstRowWithoutThead = !hasThead && rowIndex === 0;
+                        rowIndex++;
+                        const updatedTr = trInner.replace(/<th\b([^>]*)>/gi, (thMatch, thAttrs) => {
+                            if (/scope\s*=/i.test(thAttrs)) return thMatch;
+                            const scopeVal = isFirstRowWithoutThead ? 'col' : 'row';
+                            return `<th scope="${scopeVal}"${thAttrs}>`;
+                        });
+                        return `<tr${trAttrs}>${updatedTr}</tr>`;
+                    }
+                );
+                return `<tbody${tbodyAttrs}>${updatedTbody}</tbody>`;
+            }
+        );
 
         // If <tr> tags are directly under <table> without <thead> or <tbody>
         if (!hasThead && !/<tbody\b/i.test(updatedInner)) {

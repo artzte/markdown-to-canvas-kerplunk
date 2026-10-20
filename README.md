@@ -1,6 +1,6 @@
 # kerplunk
 
-Compiles Markdown (`.md`) and Word (`.docx`) course material into plain, semantic HTML you can paste into
+Compiles Markdown (`.md`) course material into plain, semantic HTML you can paste into
 the Canvas rich-text editor. By default there is no styling of its own: no wrapper, classes, or inline
 styles, so the institution's Canvas theme styles the page like any other.
 
@@ -14,7 +14,7 @@ Along the way it:
 - simplifies code blocks to a plain `<pre>` (no pandoc line anchors or highlighting spans)
 - rewrites relative links against a `baseUrl`, so `../week2/notes.md` points at the published repo
 - builds a Canvas QTI `.zip` for any `*-quiz.md` / `*_quiz.md` / `quiz*.md` file
-- optionally writes a PDF (styled, via wkhtmltopdf if installed) and a DOCX
+- optionally writes a PDF (styled, via wkhtmltopdf if installed, opt-in with `--pdf`)
 
 Derived from [Living Syllabus](https://github.com/ryanncode/living-syllabus) by Ryan N.
 
@@ -22,9 +22,9 @@ Derived from [Living Syllabus](https://github.com/ryanncode/living-syllabus) by 
 
 - Node.js 18+
 - [pandoc](https://pandoc.org/installing.html) on `PATH`
-  - Linux: `sudo apt install pandoc`
-  - macOS: `brew install pandoc`
-  - Windows: `winget install JohnMacFarlane.Pandoc` (or `choco install pandoc` / `scoop install pandoc`)
+    - Linux: `sudo apt install pandoc`
+    - macOS: `brew install pandoc`
+    - Windows: `winget install JohnMacFarlane.Pandoc` (or `choco install pandoc` / `scoop install pandoc`)
 - optional: `wkhtmltopdf` for PDFs that match the theme (`sudo apt install wkhtmltopdf` or `winget install wkhtmltopdf`)
 
 ## Install
@@ -35,6 +35,7 @@ npm run install-cli   # bundles to dist/kerplunk and installs to user PATH (~/.l
 ```
 
 Alternatively, link globally via npm (creates native Windows `.cmd`/`.ps1` wrappers or Unix symlinks):
+
 ```bash
 npm link
 ```
@@ -42,11 +43,22 @@ npm link
 ## Usage
 
 ```bash
-kerplunk modules/week2/week2-reading.md        # HTML + PDF next to the source
-kerplunk modules --html-only -o dist/          # whole folder, mirrored into dist/
+kerplunk modules/week2/week2-reading.md        # Canvas HTML next to the source
+kerplunk modules/week2/week2-reading.md --pdf  # Canvas HTML + styled PDF
+kerplunk modules -o dist/                      # whole folder, mirrored into dist/
 kerplunk syllabus.md --theme artzt.css         # opt in to an inlined theme
 kerplunk --list-themes                         # list sample starter themes
 kerplunk --help
+```
+
+### Markdown Only (Word / DOCX Migration)
+
+Kerplunk is intentionally opinionated and only compiles Markdown (`.md`, `.markdown`) source files to maintain clean version control, semantic markup, and reliable Canvas accessibility.
+
+If you have legacy Microsoft Word (`.docx`) course materials, convert them to Markdown first using Pandoc before processing them with Kerplunk:
+
+```bash
+pandoc document.docx -f docx -t gfm -o document.md
 ```
 
 ### Themes (optional)
@@ -54,6 +66,7 @@ kerplunk --help
 By default, kerplunk outputs plain, semantic HTML styled directly by your Canvas theme.
 
 If you specify a theme, its CSS is inlined onto each element and the output is wrapped in `<div class="kerplunk">`. Themes can be set via:
+
 1. CLI option: `--theme <path>` (e.g. `--theme artzt.css` or `--theme ./themes/water.css`), resolved relative to the current working directory (`process.cwd()`).
 2. Config file: `"theme": "artzt.css"` in `kerplunk.config.json` (or `.kerplunkrc` / `package.json`), resolved relative to the folder containing the config file.
 
@@ -71,6 +84,43 @@ Relative links are rewritten when a base URL is known. In priority order:
 The search walks up from the input and stops at the git root. Links resolve relative to the folder
 containing that config.
 
+### Project Configuration (`kerplunk.config.json`)
+
+You can create a `kerplunk.config.json` (or `.kerplunkrc` or in `package.json` under `"kerplunk"`) in your course root:
+
+```json
+{
+    "theme": "artzt.css",
+    "baseUrl": "https://username.github.io/my-course",
+    "formats": ["html", "pdf"]
+}
+```
+
+- **`theme`**: default theme CSS to inline.
+- **`baseUrl`**: base URL to rewrite relative links against.
+- **`formats`**: default outputs to generate (e.g. `["html"]`, `["html", "pdf"]`, or `["pdf"]`). CLI flags (`--pdf`, `--pdf-only`, `--html-only`) override this setting.
+
+### Optional PDF Generation
+
+By default, Kerplunk produces clean Canvas-ready HTML only. When you need printable syllabus or lecture handouts, you can opt into PDF output:
+
+- **Via CLI flag**:
+    - `kerplunk lecture.md --pdf` generates both `lecture.html` and `lecture.pdf`.
+    - `kerplunk lecture.md --pdf-only` generates only `lecture.pdf`.
+    - `kerplunk lecture.md --html-only` explicitly limits output to HTML (overriding config files).
+- **Via Config**: Set `"formats": ["html", "pdf"]` in `kerplunk.config.json` so `kerplunk` always generates both in that course repository.
+
+#### PDF Engines & Styling
+
+1. **`wkhtmltopdf` (Recommended - Fully Styled)**:
+   When `wkhtmltopdf` is installed on your `PATH`, Kerplunk renders the inlined HTML document through WebKit. This ensures the output PDF has standard print margins (20mm vertical, 15mm horizontal) and preserves your full CSS theme styling, table enhancements, and font choices.
+    - **Ubuntu/Debian**: `sudo apt install wkhtmltopdf`
+    - **macOS**: `brew install --cask wkhtmltopdf`
+    - **Windows**: `winget install wkhtmltopdf`
+
+2. **Pandoc Fallback**:
+   If `wkhtmltopdf` is not detected, Kerplunk falls back to Pandoc's native PDF generation (`pandoc -t pdf`), which delegates to LaTeX or Typst if installed. Note that the Pandoc fallback generates plain documents and cannot apply CSS theme styles.
+
 ## Library
 
 ```js
@@ -81,6 +131,9 @@ await build('modules', { theme: 'artzt.css', outDir: 'dist', formats: ['html'] }
 ## Development
 
 ```bash
-npm test
-npm run bundle
+npm test            # Run test suite with native node:test runner
+npm run test:watch  # Run tests in watch mode
+npm run lint        # Check code with ESLint
+npm run format      # Format code with Prettier
+npm run bundle      # Build dist standalone bundle
 ```

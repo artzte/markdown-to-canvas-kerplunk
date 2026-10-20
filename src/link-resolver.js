@@ -58,17 +58,51 @@ function getThemeFromPackage(pkg) {
 }
 
 /**
+ * Validates and normalizes a formats setting.
+ * Allowed formats are 'html' and 'pdf'.
+ * Returns an array of lowercase strings or null.
+ */
+function normalizeFormats(formats) {
+    if (!formats) return null;
+    const list = Array.isArray(formats) ? formats : [formats];
+    const allowed = ['html', 'pdf'];
+    const filtered = list
+        .map((f) => (typeof f === 'string' ? f.trim().toLowerCase() : ''))
+        .filter((f) => allowed.includes(f));
+    return filtered.length > 0 ? Array.from(new Set(filtered)) : null;
+}
+
+/**
+ * Extracts formats setting from a parsed package.json object.
+ * Priority:
+ * 1. kerplunk.formats
+ * 2. formats
+ */
+function getFormatsFromPackage(pkg) {
+    if (!pkg || typeof pkg !== 'object') return null;
+
+    if (pkg.kerplunk && typeof pkg.kerplunk === 'object' && pkg.kerplunk.formats) {
+        return normalizeFormats(pkg.kerplunk.formats);
+    }
+    if (pkg.formats) {
+        return normalizeFormats(pkg.formats);
+    }
+    return null;
+}
+
+/**
  * Traverses upwards from `startPath` looking for a package.json or kerplunk config file
- * that sets a baseUrl or theme. Returns { baseUrl, theme, configDir, source } or null.
+ * that sets a baseUrl, theme, or formats. Returns { baseUrl, theme, formats, configDir, source } or null.
  */
 function findProjectConfig(startPath) {
     if (!startPath) return null;
 
     let currentDir;
     try {
-        currentDir = fs.existsSync(startPath) && fs.statSync(startPath).isDirectory()
-            ? path.resolve(startPath)
-            : path.dirname(path.resolve(startPath));
+        currentDir =
+            fs.existsSync(startPath) && fs.statSync(startPath).isDirectory()
+                ? path.resolve(startPath)
+                : path.dirname(path.resolve(startPath));
     } catch {
         currentDir = path.resolve(process.cwd());
     }
@@ -76,6 +110,7 @@ function findProjectConfig(startPath) {
     while (currentDir) {
         let dirBaseUrl = null;
         let dirTheme = null;
+        let dirFormats = null;
         let dirSource = null;
 
         // 1. Check dedicated config files first (.kerplunkrc, kerplunk.config.json)
@@ -87,6 +122,7 @@ function findProjectConfig(startPath) {
                     const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
                     dirBaseUrl = cfg.baseUrl || cfg.baseURL || cfg.base_url || null;
                     dirTheme = typeof cfg.theme === 'string' ? cfg.theme : null;
+                    dirFormats = normalizeFormats(cfg.formats);
                     dirSource = cfgName;
                     break;
                 } catch {}
@@ -100,14 +136,16 @@ function findProjectConfig(startPath) {
                 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
                 if (!dirBaseUrl) dirBaseUrl = getBaseUrlFromPackage(pkg);
                 if (!dirTheme) dirTheme = getThemeFromPackage(pkg);
+                if (!dirFormats) dirFormats = getFormatsFromPackage(pkg);
                 if (!dirSource) dirSource = 'package.json';
             } catch {}
         }
 
-        if (dirBaseUrl || dirTheme) {
+        if (dirBaseUrl || dirTheme || dirFormats) {
             return {
                 baseUrl: dirBaseUrl,
                 theme: dirTheme,
+                formats: dirFormats,
                 configDir: currentDir,
                 source: dirSource
             };
@@ -127,6 +165,7 @@ function findProjectConfig(startPath) {
     const cwd = path.resolve(process.cwd());
     let cwdBaseUrl = null;
     let cwdTheme = null;
+    let cwdFormats = null;
     let cwdSource = null;
 
     const cwdConfigFiles = ['.kerplunkrc', 'kerplunk.config.json'];
@@ -137,6 +176,7 @@ function findProjectConfig(startPath) {
                 const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
                 cwdBaseUrl = cfg.baseUrl || cfg.baseURL || cfg.base_url || null;
                 cwdTheme = typeof cfg.theme === 'string' ? cfg.theme : null;
+                cwdFormats = normalizeFormats(cfg.formats);
                 cwdSource = `${cfgName} (cwd)`;
                 break;
             } catch {}
@@ -149,14 +189,16 @@ function findProjectConfig(startPath) {
             const pkg = JSON.parse(fs.readFileSync(cwdPkgPath, 'utf8'));
             if (!cwdBaseUrl) cwdBaseUrl = getBaseUrlFromPackage(pkg);
             if (!cwdTheme) cwdTheme = getThemeFromPackage(pkg);
+            if (!cwdFormats) cwdFormats = getFormatsFromPackage(pkg);
             if (!cwdSource) cwdSource = 'package.json (cwd)';
         } catch {}
     }
 
-    if (cwdBaseUrl || cwdTheme) {
+    if (cwdBaseUrl || cwdTheme || cwdFormats) {
         return {
             baseUrl: cwdBaseUrl,
             theme: cwdTheme,
+            formats: cwdFormats,
             configDir: cwd,
             source: cwdSource
         };
@@ -193,7 +235,7 @@ function resolveAnchorHref(href, baseUrl, docRelDir = '') {
     // Split off query string and hash
     const match = trimmed.match(/^([^?#]*)([?#].*)?$/);
     const pathname = match ? match[1] : trimmed;
-    const searchAndHash = match ? (match[2] || '') : '';
+    const searchAndHash = match ? match[2] || '' : '';
 
     let combinedPath;
     if (pathname.startsWith('/')) {
@@ -217,12 +259,15 @@ function rewriteHtmlAnchors(html, baseUrl, docRelDir = '') {
     if (!html || !baseUrl) return html;
 
     return html.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
-        const updatedAttrs = attrs.replace(/\bhref\s*=\s*(?:(['"])(.*?)\1|([^\s>]+))/gi, (attrMatch, quote, quotedVal, unquotedVal) => {
-            const hrefVal = quote ? quotedVal : unquotedVal;
-            const q = quote || '"';
-            const resolved = resolveAnchorHref(hrefVal, baseUrl, docRelDir);
-            return `href=${q}${resolved}${q}`;
-        });
+        const updatedAttrs = attrs.replace(
+            /\bhref\s*=\s*(?:(['"])(.*?)\1|([^\s>]+))/gi,
+            (attrMatch, quote, quotedVal, unquotedVal) => {
+                const hrefVal = quote ? quotedVal : unquotedVal;
+                const q = quote || '"';
+                const resolved = resolveAnchorHref(hrefVal, baseUrl, docRelDir);
+                return `href=${q}${resolved}${q}`;
+            }
+        );
         return `<a${updatedAttrs}>`;
     });
 }
@@ -231,6 +276,8 @@ module.exports = {
     normalizeBaseUrl,
     getBaseUrlFromPackage,
     getThemeFromPackage,
+    normalizeFormats,
+    getFormatsFromPackage,
     findProjectConfig,
     resolveAnchorHref,
     rewriteHtmlAnchors

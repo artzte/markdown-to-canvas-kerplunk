@@ -45,7 +45,7 @@ async function install() {
     const envPath = process.env.PATH || '';
     const inPath = envPath
         .split(path.delimiter)
-        .some(p => path.resolve(p).toLowerCase() === path.resolve(targetDir).toLowerCase());
+        .some((p) => path.resolve(p).toLowerCase() === path.resolve(targetDir).toLowerCase());
 
     if (!inPath) {
         if (isWin) {
@@ -61,7 +61,7 @@ async function install() {
     }
 }
 
-install().catch(err => {
+install().catch((err) => {
     console.error('❌ Installation failed:', err.message || err);
     process.exit(1);
 });
