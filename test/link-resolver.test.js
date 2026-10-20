@@ -14,6 +14,7 @@ const {
     resolveAnchorHref,
     rewriteHtmlAnchors
 } = require('../src/link-resolver.js');
+const { hasCommand } = require('../index.js');
 
 describe('link-resolver', () => {
     describe('normalizeBaseUrl', () => {
@@ -347,7 +348,9 @@ describe('link-resolver', () => {
             });
 
             assert(fs.existsSync(generatedHtmlPath), 'HTML file must be created from config formats');
-            assert(fs.existsSync(generatedPdfPath), 'PDF file must be created from config formats');
+            if (hasCommand('wkhtmltopdf')) {
+                assert(fs.existsSync(generatedPdfPath), 'PDF file must be created from config formats');
+            }
         });
 
         it('allows --html-only to override kerplunk.config.json formats', () => {
