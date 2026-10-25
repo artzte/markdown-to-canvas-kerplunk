@@ -67,6 +67,12 @@ describe('html-simplify', () => {
                 ),
                 '<li>☐ Todo</li>\n<li>☑ <strong>Done</strong></li>'
             );
+            assert.strictEqual(
+                simplifyHtml(
+                    '<li><input type="checkbox" disabled="" />Todo</li>\n<li><input type="checkbox" checked="" disabled="" /><strong>Done</strong></li>'
+                ),
+                '<li>☐ Todo</li>\n<li>☑ <strong>Done</strong></li>'
+            );
         });
 
         it('preserves untouched markup and leaves code text alone', () => {

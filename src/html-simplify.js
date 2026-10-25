@@ -44,9 +44,14 @@ function simplifyHtml(html) {
     }
 
     let result = html.replace(
-        /<label><input type="checkbox"( checked="")? \/>([\s\S]*?)<\/label>/gi,
-        (match, checked, label) => `${checked ? '☑' : '☐'} ${label}`
+        /<label\b[^>]*>\s*(<input\b[^>]*\btype=["']?checkbox["']?[^>]*\/?>(?:<\/input>)?)\s*([\s\S]*?)<\/label>/gi,
+        '$1 $2'
     );
+
+    result = result.replace(/<input\b[^>]*\btype=["']?checkbox["']?[^>]*\/?>(?:<\/input>)?\s*/gi, (match) => {
+        const isChecked = /\bchecked\b/i.test(match);
+        return isChecked ? '☑ ' : '☐ ';
+    });
 
     const linkedIds = new Set(
         [...result.matchAll(/\bhref\s*=\s*["']#([^"']+)["']/gi)].map((m) => decodeURIComponent(m[1]))
