@@ -43,7 +43,6 @@
 }
 
 .kerplunk a.kerplunk-anchor {
-    color: #8c959f;
     text-decoration: none;
     font-weight: 400;
     margin-left: 0.35em;
@@ -51,7 +50,6 @@
 }
 
 .kerplunk a.kerplunk-anchor:hover {
-    color: #0969da;
     text-decoration: underline;
 }
 

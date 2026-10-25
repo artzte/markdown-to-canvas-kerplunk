@@ -13,14 +13,14 @@ describe('heading-anchors', () => {
                 addHeadingAnchors(
                     '<h1 id="week-1">Week 1</h1>\n<h2 id="what-is-js">What <em>Is</em> "JS"?</h2>\n<h3>No id</h3>'
                 ),
-                '<h1 id="week-1">Week 1</h1>\n<h2 id="what-is-js">What <em>Is</em> "JS"? <a href="#what-is-js" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: What Is &quot;JS&quot;?">#</a></h2>\n<h3>No id</h3>'
+                '<h1 id="week-1">Week 1</h1>\n<h2 id="what-is-js">What <em>Is</em> "JS"? <a href="#what-is-js" style="font-size: 0.8em; text-decoration: none;" aria-label="Link to section: What Is &quot;JS&quot;?">#</a></h2>\n<h3>No id</h3>'
             );
         });
 
         it('skips the first heading when document starts with h2', () => {
             assert.strictEqual(
                 addHeadingAnchors('<h2 id="intro">Intro</h2>\n<h2 id="reading">Reading</h2>'),
-                '<h2 id="intro">Intro</h2>\n<h2 id="reading">Reading <a href="#reading" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Reading">#</a></h2>'
+                '<h2 id="intro">Intro</h2>\n<h2 id="reading">Reading <a href="#reading" style="font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Reading">#</a></h2>'
             );
         });
     });
@@ -46,7 +46,7 @@ describe('heading-anchors', () => {
             const html = fs.readFileSync(path.join(tmpDir, 'week2.html'), 'utf8');
             assert(
                 html.includes(
-                    '<h2 id="reading">Reading <a href="#reading" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Reading">#</a></h2>'
+                    '<h2 id="reading">Reading <a href="#reading" style="font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Reading">#</a></h2>'
                 ),
                 'Page has styled heading permalinks'
             );
@@ -63,7 +63,7 @@ describe('heading-anchors', () => {
             assert(h2StartHtml.includes('<h2>Top Heading</h2>'), 'First heading (h2) has no permalink');
             assert(
                 h2StartHtml.includes(
-                    '<h3 id="next-section">Next Section <a href="#next-section" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Next Section">#</a></h3>'
+                    '<h3 id="next-section">Next Section <a href="#next-section" style="font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Next Section">#</a></h3>'
                 ),
                 'Subsequent heading has permalink'
             );

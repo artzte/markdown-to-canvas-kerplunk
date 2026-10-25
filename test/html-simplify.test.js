@@ -135,7 +135,7 @@ describe('html-simplify', () => {
             assert.strictEqual((html.match(/ id=/g) || []).length, 1, 'Only the h2 keeps an id (for its permalink)');
             assert(
                 html.includes(
-                    '<h2 id="tasks">Tasks <a href="#tasks" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Tasks">#</a></h2>'
+                    '<h2 id="tasks">Tasks <a href="#tasks" style="font-size: 0.8em; text-decoration: none;" aria-label="Link to section: Tasks">#</a></h2>'
                 ),
                 'h2 has a styled permalink'
             );
