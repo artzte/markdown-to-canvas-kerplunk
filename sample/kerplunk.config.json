@@ -1,0 +1,5 @@
+{
+    "theme": "theme.css",
+    "baseUrl": "https://cocc.edu/courses/cis195",
+    "formats": ["html"]
+}

@@ -23,7 +23,10 @@ function addHeadingAnchors(html) {
             return match;
         }
         const id = idMatch[1];
-        const label = inner.replace(/<[^>]+>/g, '').replace(/"/g, '&quot;').trim();
+        const label = inner
+            .replace(/<[^>]+>/g, '')
+            .replace(/"/g, '&quot;')
+            .trim();
         return `<${tag}${attrs}>${inner} <a href="#${id}" style="color: #888; font-size: 0.8em; text-decoration: none;" aria-label="Link to section: ${label}">#</a></${tag}>`;
     });
 }
