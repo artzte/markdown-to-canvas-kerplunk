@@ -10,12 +10,15 @@ body {
   color: inherit;
 }
 
-/* 2. Initial Page Title Banner */
+/* 2. Initial Page Title Banner
+ * Only the document's title gets the banner: the first h1, or the first h2 when
+ * no h1 precedes it. `:not(h1 ~ h2)` keeps the first h2 under an h1 title plain.
+ */
 .kerplunk > section:first-of-type > h1,
 .kerplunk > section:first-of-type > h2:first-child,
-.kerplunk > section:first-of-type > h2:first-of-type,
+.kerplunk > section:first-of-type > h2:first-of-type:not(h1 ~ h2),
 .kerplunk > h1:first-of-type,
-.kerplunk > h2:first-of-type,
+.kerplunk > h2:first-of-type:not(h1 ~ h2),
 section:first-of-type > h1:first-child,
 section:first-of-type > h2:first-child {
   background-color: #2c5367;
